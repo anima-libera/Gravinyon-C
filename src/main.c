@@ -1,8 +1,10 @@
 
-int printf(char*, ...);
+#include "window.h"
 
 int main(void)
 {
-	printf("hey\n");
+	init_g_graphics();
+	SDL_Delay(300);
+	cleanup_g_graphics();
 	return 0;
 }
