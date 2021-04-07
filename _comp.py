@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-""" Compiles the Gavinyon source code.
+""" Compiles the Gravinyon source code.
 
 Usage:
   {this_script} [options]
@@ -11,7 +11,7 @@ Options:
   -d  --debug       Standard debuging build, defines DEBUG, launches with -d.
 
 Example usage for debug:
-  {this_script} -d -l -d
+  {this_script} -d -l
 """
 
 import sys
@@ -88,7 +88,7 @@ with open(os.path.join(src_dir_name, embedded_source_file_name), "w") as esf:
 	esf.write("/* This file is overwritten at each compilation.\n")
 	esf.write(" * Do not modify, see \"{}\" ".format(
 		embedded_header_file_name))
-	esf.write("or \"comp.py\" instead. */\n\n")
+	esf.write("or \"_comp.py\" instead. */\n\n")
 	esf.write("\n".join(em_content)) # There is a trailing newline it's ok
 
 # List src files

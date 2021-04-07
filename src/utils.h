@@ -1,4 +1,8 @@
 
+/* Gravinyon header, contaning declarations for various utility functions and
+ * macros.
+ * Implementations are in "utils.c". */
+
 #ifndef GRAVINYON_HEADER_UTILS_
 #define GRAVINYON_HEADER_UTILS_
 
