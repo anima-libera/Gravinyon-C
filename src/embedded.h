@@ -15,6 +15,9 @@
  * compatible with const char*. */
 #define EMBEDDED(filename_) extern
 
+EMBEDDED("shaders/ship.vert") const char* g_ship_vert;
+EMBEDDED("shaders/ship.geom") const char* g_ship_geom;
+EMBEDDED("shaders/ship.frag") const char* g_ship_frag;
 EMBEDDED("shaders/enemies.vert") const char* g_enemies_vert;
 EMBEDDED("shaders/enemies.geom") const char* g_enemies_geom;
 EMBEDDED("shaders/enemies.frag") const char* g_enemies_frag;

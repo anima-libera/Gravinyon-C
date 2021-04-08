@@ -8,6 +8,7 @@
 
 #include <GL/glew.h>
 
+extern GLuint g_shprog_draw_ship;
 extern GLuint g_shprog_draw_enemies;
 
 void shprog_build_all(void);

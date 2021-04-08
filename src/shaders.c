@@ -84,6 +84,16 @@ static GLuint shprog_compute_build(const char* src_comp)
 	return shprog_id;
 }
 
+GLuint g_shprog_draw_ship = 0;
+
+static void shprog_build_ship(void)
+{
+	g_shprog_draw_ship = shprog_build(
+		g_ship_vert,
+		g_ship_geom,
+		g_ship_frag);
+}
+
 GLuint g_shprog_draw_enemies = 0;
 
 static void shprog_build_enemies(void)
@@ -96,6 +106,7 @@ static void shprog_build_enemies(void)
 
 void shprog_build_all(void)
 {
+	shprog_build_ship();
 	shprog_build_enemies();
 }
 
