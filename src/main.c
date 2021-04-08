@@ -142,6 +142,9 @@ int main(void)
 			}
 		}
 
+		#define SHIP_COLLIDE_RADIUS 0.023
+		#define ENEMY_RADIUS 0.020
+		
 		/* Update the ship and firing */
 		{
 			float vx = cosf(ship.angle) * ship.speed;
@@ -151,10 +154,8 @@ int main(void)
 				square_length(ship.x - cursor_x, ship.y - cursor_y);
 			float cursor_dist = sqrtf(cursor_squaredist);
 
-			#define SHIP_RADIUS 0.023
-
-			/* Collision with the cursor or enemies */
-			if (cursor_dist < SHIP_RADIUS)
+			/* Collision with the cursor */
+			if (cursor_dist < SHIP_COLLIDE_RADIUS)
 			{
 				printf("TODO: die\n");
 				ship.x = 0.5f;
@@ -162,12 +163,13 @@ int main(void)
 				ship.speed = 0.0f;
 				goto ship_update_end;
 			}
-			#define ENEMY_RADIUS 0.020
+			
+			/* Collision with enemies */
 			for (unsigned int i = 0; i < enemy_number; i++)
 			{
 				float dist = length(
 					ship.x - enemy_array[i].x, ship.y - enemy_array[i].y);
-				if (dist < SHIP_RADIUS + ENEMY_RADIUS)
+				if (dist < SHIP_COLLIDE_RADIUS + ENEMY_RADIUS)
 				{
 					printf("TODO: die\n");
 					ship.x = 0.5f;
@@ -176,7 +178,6 @@ int main(void)
 					goto ship_update_end;
 				}
 			}
-			#undef ENEMY_RADIUS
 
 			float cursor_angle = atan2f(cursor_y - ship.y, cursor_x - ship.x);
 
@@ -197,9 +198,9 @@ int main(void)
 				#endif
 
 				bullet_array[bullet_number].x =
-					ship.x + cosf(cursor_angle) * SHIP_RADIUS;
+					ship.x + cosf(cursor_angle) * SHIP_COLLIDE_RADIUS;
 				bullet_array[bullet_number].y =
-					ship.y + sinf(cursor_angle) * SHIP_RADIUS;
+					ship.y + sinf(cursor_angle) * SHIP_COLLIDE_RADIUS;
 				bullet_array[bullet_number].tail_x = ship.x;
 				bullet_array[bullet_number].tail_y = ship.y;
 				bullet_array[bullet_number].r = 1.0f;
@@ -213,8 +214,6 @@ int main(void)
 					fprintf(stderr, "TODO: expand the bullet buffer\n");
 				}
 			}
-
-			#undef SHIP_RADIUS
 			
 			#define GRAVITY_FACTOR 0.0008f
 			vx += GRAVITY_FACTOR * (cursor_x - ship.x) / cursor_dist;
@@ -296,8 +295,6 @@ int main(void)
 				#define STEP 0.010
 				for (float s = 0.0f; s <= bullet_length; s += STEP)
 				{
-					#define ENEMY_RADIUS 0.020
-
 					float s_unit = s / bullet_length;
 
 					float s_x =
@@ -318,17 +315,14 @@ int main(void)
 						bullet_array[i] = bullet_array[--bullet_number];
 						continue;
 					}
-
-					#undef ENEMY_RADIUS
 				}
 				#undef STEP
 			}
 
 			/* Collision with the ship */
-			#define SHIP_RADIUS 0.023
 			float ship_dist = length(
 				bullet_array[i].x - ship.x, bullet_array[i].y - ship.y);
-			if (ship_dist < SHIP_RADIUS)
+			if (ship_dist < SHIP_COLLIDE_RADIUS)
 			{
 				printf("TODO: die\n");
 				ship.x = 0.5f;
@@ -339,8 +333,6 @@ int main(void)
 				bullet_array[i] = bullet_array[--bullet_number];
 				continue;
 			}
-
-			#undef SHIP_RADIUS
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, buf_bullets_id);
 		glBufferData(GL_ARRAY_BUFFER, bullet_maximum_number * sizeof(bullet_t),
@@ -382,6 +374,9 @@ int main(void)
 		glBindBuffer(GL_ARRAY_BUFFER, buf_enemies_id);
 		glBufferData(GL_ARRAY_BUFFER, enemy_maximum_number * sizeof(enemy_t),
 			enemy_array, GL_DYNAMIC_DRAW);
+
+		#undef SHIP_COLLIDE_RADIUS
+		#undef ENEMY_RADIUS
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
