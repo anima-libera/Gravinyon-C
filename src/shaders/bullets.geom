@@ -15,6 +15,7 @@ void main()
 	float safe_time_float = float(v_safe_time[0]);
 	g_color = vec3(1.0, 0.0, 0.0) +
 		vec3(0.0, 1.0, 1.0) * (safe_time_float/20.0);
+	/* TODO: The code above doesn't do what it is supposed to do, does it ? */
 
 	float angle = v_angle[0];
 	for (int i = 0; i < 3; i++)

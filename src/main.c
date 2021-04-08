@@ -76,18 +76,18 @@ int main(void)
 
 	/* Initialize the enemies */
 	unsigned int enemy_maximum_number = 256;
-	unsigned int enemy_number = 10;
+	unsigned int enemy_number = 0;
 	enemy_t* enemy_array = xcalloc(enemy_maximum_number, sizeof(enemy_t));
-	for (unsigned int i = 0; i < enemy_number; i++)
+	for (unsigned int i = 0; i < 13; i++)
 	{
-		enemy_t* new_enemy = &enemy_array[i];
-		new_enemy->x = 0.0f;
-		new_enemy->y = 0.0f;
-		new_enemy->r = (float)i / (float)enemy_number;
-		new_enemy->g = 1.0f - new_enemy->r;
-		new_enemy->b = (float)(i % 2);
-		new_enemy->angle = TAU * (float)i / (float)enemy_number;
-		new_enemy->speed = 0.004f;
+		enemy_t* new_enemy = &enemy_array[enemy_number++];
+		new_enemy->x = -0.5f;
+		new_enemy->y = -0.5f;
+		new_enemy->r = 0.0f;
+		new_enemy->g = 1.0f;
+		new_enemy->b = 1.0f;
+		new_enemy->angle = rg_float(g_rg, 0.0f, TAU);
+		new_enemy->speed = rg_float(g_rg, 0.001f, 0.01f);
 	}
 	GLuint buf_enemies_id;
 	glGenBuffers(1, &buf_enemies_id);
@@ -136,6 +136,24 @@ int main(void)
 					{
 						case SDLK_ESCAPE:
 							running = 0;
+						break;
+
+						case SDLK_e:
+							for (unsigned int i = 0; i < 13; i++)
+							{
+								enemy_t* new_enemy = &enemy_array[enemy_number++];
+								new_enemy->x = -0.5f;
+								new_enemy->y = -0.5f;
+								new_enemy->r = 0.0f;
+								new_enemy->g = 1.0f;
+								new_enemy->b = 1.0f;
+								new_enemy->angle = rg_float(g_rg, 0.0f, TAU);
+								new_enemy->speed = rg_float(g_rg, 0.001f, 0.01f);
+							}
+							glBindBuffer(GL_ARRAY_BUFFER, buf_enemies_id);
+							glBufferData(GL_ARRAY_BUFFER,
+								enemy_maximum_number * sizeof(enemy_t),
+								enemy_array, GL_DYNAMIC_DRAW);
 						break;
 					}
 				break;
