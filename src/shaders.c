@@ -104,9 +104,20 @@ static void shprog_build_enemies(void)
 		g_enemies_frag);
 }
 
+GLuint g_shprog_draw_bullets = 0;
+
+static void shprog_build_bullets(void)
+{
+	g_shprog_draw_bullets = shprog_build(
+		g_bullets_vert,
+		g_bullets_geom,
+		g_bullets_frag);
+}
+
 void shprog_build_all(void)
 {
 	shprog_build_ship();
 	shprog_build_enemies();
+	shprog_build_bullets();
 }
 
