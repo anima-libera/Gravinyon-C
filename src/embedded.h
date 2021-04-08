@@ -24,5 +24,8 @@ EMBEDDED("shaders/enemies.frag") const char* g_enemies_frag;
 EMBEDDED("shaders/bullets.vert") const char* g_bullets_vert;
 EMBEDDED("shaders/bullets.geom") const char* g_bullets_geom;
 EMBEDDED("shaders/bullets.frag") const char* g_bullets_frag;
+EMBEDDED("shaders/parts.vert") const char* g_parts_vert;
+EMBEDDED("shaders/parts.geom") const char* g_parts_geom;
+EMBEDDED("shaders/parts.frag") const char* g_parts_frag;
 
 #endif /* GRAVINYON_HEADER_EMBEDDED_ */

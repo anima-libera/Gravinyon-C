@@ -114,10 +114,21 @@ static void shprog_build_bullets(void)
 		g_bullets_frag);
 }
 
+GLuint g_shprog_draw_parts = 0;
+
+static void shprog_build_parts(void)
+{
+	g_shprog_draw_parts = shprog_build(
+		g_parts_vert,
+		g_parts_geom,
+		g_parts_frag);
+}
+
 void shprog_build_all(void)
 {
 	shprog_build_ship();
 	shprog_build_enemies();
 	shprog_build_bullets();
+	shprog_build_parts();
 }
 

@@ -3,6 +3,7 @@
 #include "dbgmsg.h"
 #include "shaders.h"
 #include "utils.h"
+#include "random.h"
 
 struct ship_t
 {
@@ -25,10 +26,21 @@ struct bullet_t
 {
 	float x, y;
 	float tail_x, tail_y;
-	float r, g, b;
 	float angle, speed;
+	GLuint safe_time;
 };
 typedef struct bullet_t bullet_t;
+
+struct part_t
+{
+	float x, y;
+	float r, g, b;
+	float radius, radius_max;
+	float draw_angle, rotation;
+	float angle, speed;
+	GLuint life_time, life_time_max;
+};
+typedef struct part_t part_t;
 
 inline static float square_length(float x, float y)
 {
@@ -53,6 +65,8 @@ int main(void)
 
 	shprog_build_all();
 
+	g_rg = rg_create_timeseeded(0);
+
 	/* Initialize the ship */
 	ship_t ship = {.x = 0.5f, .y = 0.5f, .reload_max = 5};
 	GLuint buf_ship_id;
@@ -66,13 +80,14 @@ int main(void)
 	enemy_t* enemy_array = xcalloc(enemy_maximum_number, sizeof(enemy_t));
 	for (unsigned int i = 0; i < enemy_number; i++)
 	{
-		enemy_array[i].x = 0.0f;
-		enemy_array[i].y = 0.0f;
-		enemy_array[i].r = (float)i / (float)enemy_number;
-		enemy_array[i].g = 1.0f - enemy_array[i].r;
-		enemy_array[i].b = (float)(i % 2);
-		enemy_array[i].angle = TAU * (float)i / (float)enemy_number;
-		enemy_array[i].speed = 0.004f;
+		enemy_t* new_enemy = &enemy_array[i];
+		new_enemy->x = 0.0f;
+		new_enemy->y = 0.0f;
+		new_enemy->r = (float)i / (float)enemy_number;
+		new_enemy->g = 1.0f - new_enemy->r;
+		new_enemy->b = (float)(i % 2);
+		new_enemy->angle = TAU * (float)i / (float)enemy_number;
+		new_enemy->speed = 0.004f;
 	}
 	GLuint buf_enemies_id;
 	glGenBuffers(1, &buf_enemies_id);
@@ -89,6 +104,16 @@ int main(void)
 	glBindBuffer(GL_ARRAY_BUFFER, buf_bullets_id);
 	glBufferData(GL_ARRAY_BUFFER, bullet_maximum_number * sizeof(bullet_t),
 		bullet_array, GL_DYNAMIC_DRAW);
+
+	unsigned int part_maximum_number = 256;
+	unsigned int part_number = 0;
+	part_t* part_array = xcalloc(part_maximum_number, sizeof(part_t));
+
+	GLuint buf_parts_id;
+	glGenBuffers(1, &buf_parts_id);
+	glBindBuffer(GL_ARRAY_BUFFER, buf_parts_id);
+	glBufferData(GL_ARRAY_BUFFER, part_maximum_number * sizeof(part_t),
+		part_array, GL_DYNAMIC_DRAW);
 
 	float cursor_x = 0.0f;
 	float cursor_y = 0.0f;
@@ -197,18 +222,16 @@ int main(void)
 				#undef RECOIL_FACTOR
 				#endif
 
-				bullet_array[bullet_number].x =
+				bullet_t* new_bullet = &bullet_array[bullet_number++];
+				new_bullet->x =
 					ship.x + cosf(cursor_angle) * SHIP_COLLIDE_RADIUS;
-				bullet_array[bullet_number].y =
+				new_bullet->y =
 					ship.y + sinf(cursor_angle) * SHIP_COLLIDE_RADIUS;
-				bullet_array[bullet_number].tail_x = ship.x;
-				bullet_array[bullet_number].tail_y = ship.y;
-				bullet_array[bullet_number].r = 1.0f;
-				bullet_array[bullet_number].g = 0.0f;
-				bullet_array[bullet_number].b = 0.0f;
-				bullet_array[bullet_number].angle = cursor_angle;
-				bullet_array[bullet_number].speed = 0.009f / cursor_dist;
-				bullet_number++;
+				new_bullet->tail_x = ship.x;
+				new_bullet->tail_y = ship.y;
+				new_bullet->angle = cursor_angle;
+				new_bullet->speed = 0.009f / cursor_dist;
+				new_bullet->safe_time = 20;
 				if (bullet_number > bullet_maximum_number)
 				{
 					fprintf(stderr, "TODO: expand the bullet buffer\n");
@@ -259,34 +282,33 @@ int main(void)
 		/* Update the bullets */
 		for (unsigned int i = 0; i < bullet_number; i++)
 		{
-			bullet_array[i].tail_x =
-				(bullet_array[i].x + 4.0f * bullet_array[i].tail_x) / 5.0f;
-			bullet_array[i].tail_y =
-				(bullet_array[i].y + 4.0f * bullet_array[i].tail_y) / 5.0f;
+			bullet_t* bullet = &bullet_array[i];
 
-			float vx = cosf(bullet_array[i].angle) * bullet_array[i].speed;
-			float vy = sinf(bullet_array[i].angle) * bullet_array[i].speed;
+			bullet->tail_x = (bullet->x + 4.0f * bullet->tail_x) / 5.0f;
+			bullet->tail_y = (bullet->y + 4.0f * bullet->tail_y) / 5.0f;
 
-			bullet_array[i].x += vx;
-			bullet_array[i].y += vy;
+			float vx = cosf(bullet->angle) * bullet->speed;
+			float vy = sinf(bullet->angle) * bullet->speed;
+
+			bullet->x += vx;
+			bullet->y += vy;
 
 			/* Out of the world */
-			if (bullet_array[i].tail_x < -1.0f ||
-				bullet_array[i].tail_x > 1.0f ||
-				bullet_array[i].tail_y < -1.0f ||
-				bullet_array[i].tail_y > 1.0f)
+			if (bullet->tail_x < -1.0f || bullet->tail_x > 1.0f ||
+				bullet->tail_y < -1.0f || bullet->tail_y > 1.0f)
 			{
 				/* The bullet dies */
-				bullet_array[i] = bullet_array[--bullet_number];
+				*bullet = bullet_array[--bullet_number];
 				continue;
 			}
 
 			/* Collision with enemies */
 			for (unsigned int j = 0; j < enemy_number; j++)
 			{
+				enemy_t* enemy = &enemy_array[j];
+
 				float bullet_length = length(
-					bullet_array[i].x - bullet_array[i].tail_x,
-					bullet_array[i].y - bullet_array[i].tail_y);
+					bullet->x - bullet->tail_x, bullet->y - bullet->tail_y);
 				if (bullet_length == 0.0f)
 				{
 					bullet_length = 0.0001f;
@@ -298,40 +320,76 @@ int main(void)
 					float s_unit = s / bullet_length;
 
 					float s_x =
-						bullet_array[i].tail_x * s_unit +
-						bullet_array[i].x * (1.0f - s_unit);
+						bullet->tail_x * s_unit + bullet->x * (1.0f - s_unit);
 					float s_y =
-						bullet_array[i].tail_y * s_unit +
-						bullet_array[i].y * (1.0f - s_unit);
+						bullet->tail_y * s_unit + bullet->y * (1.0f - s_unit);
 
-					float dist = length(
-						enemy_array[j].x - s_x, enemy_array[j].y - s_y);
+					float dist = length(enemy->x - s_x, enemy->y - s_y);
 					if (dist < ENEMY_RADIUS)
 					{
+						/* Spaw particles */
+						unsigned int count = rg_uint(g_rg, 10, 30);
+						for (unsigned int k = 0; k < count; k++)
+						{
+							part_t* new_part = &part_array[part_number++];
+							new_part->x = enemy->x;
+							new_part->y = enemy->y;
+							new_part->r = 1.0f;
+							new_part->g = 0.0f;
+							new_part->b = 0.0f;
+							new_part->radius_max =
+								rg_float(g_rg, 0.01f, 0.03f);
+							new_part->radius = new_part->radius_max;
+							new_part->draw_angle =
+								rg_float(g_rg, 0.0f, TAU);
+							new_part->angle =
+								bullet->angle + rg_float(g_rg, -0.4f, 0.4f);
+							new_part->speed =
+								bullet->speed * rg_float(g_rg, 0.2f, 1.3f);
+							new_part->rotation =
+								rg_float(g_rg, -0.03f, 0.03f);
+							new_part->life_time_max =
+								rg_uint(g_rg, 20, 70);
+							new_part->life_time = new_part->life_time_max;
+						}
+
 						/* The enemy dies */
-						enemy_array[j] = enemy_array[--enemy_number];
+						*enemy = enemy_array[--enemy_number];
 
 						/* The bullet dies */
-						bullet_array[i] = bullet_array[--bullet_number];
-						continue;
+						*bullet = bullet_array[--bullet_number];
+						goto continue_bullets;
 					}
 				}
 				#undef STEP
 			}
+			if (0)
+			{
+				/* Warning: Super high quality code, do not stare for too
+				 * long without eye protection. */
+				continue_bullets: continue;
+			}
 
 			/* Collision with the ship */
-			float ship_dist = length(
-				bullet_array[i].x - ship.x, bullet_array[i].y - ship.y);
-			if (ship_dist < SHIP_COLLIDE_RADIUS)
+			if (bullet->safe_time > 0)
 			{
-				printf("TODO: die\n");
-				ship.x = 0.5f;
-				ship.y = 0.5f;
-				ship.speed = 0.0f;
+				bullet->safe_time--;
+			}
+			else
+			{
+				float ship_dist =
+					length(bullet->x - ship.x, bullet->y - ship.y);
+				if (ship_dist < SHIP_COLLIDE_RADIUS)
+				{
+					printf("TODO: die\n");
+					ship.x = 0.5f;
+					ship.y = 0.5f;
+					ship.speed = 0.0f;
 
-				/* The bullet dies */
-				bullet_array[i] = bullet_array[--bullet_number];
-				continue;
+					/* The bullet dies */
+					*bullet = bullet_array[--bullet_number];
+					continue;
+				}
 			}
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, buf_bullets_id);
@@ -341,35 +399,37 @@ int main(void)
 		/* Update the enemies */
 		for (unsigned int i = 0; i < enemy_number; i++)
 		{
-			float vx = cosf(enemy_array[i].angle) * enemy_array[i].speed;
-			float vy = sinf(enemy_array[i].angle) * enemy_array[i].speed;
+			enemy_t* enemy = &enemy_array[i];
 
-			enemy_array[i].x += vx;
-			enemy_array[i].y += vy;
+			float vx = cosf(enemy->angle) * enemy->speed;
+			float vy = sinf(enemy->angle) * enemy->speed;
 
-			if (enemy_array[i].x < -1.0f)
+			enemy->x += vx;
+			enemy->y += vy;
+
+			if (enemy->x < -1.0f)
 			{
-				enemy_array[i].x = -1.0f;
+				enemy->x = -1.0f;
 				vx *= -1.0f;
 			}
-			else if (enemy_array[i].x > 1.0f)
+			else if (enemy->x > 1.0f)
 			{
-				enemy_array[i].x = 1.0f;
+				enemy->x = 1.0f;
 				vx *= -1.0f;
 			}
-			if (enemy_array[i].y < -1.0f)
+			if (enemy->y < -1.0f)
 			{
-				enemy_array[i].y = -1.0f;
+				enemy->y = -1.0f;
 				vy *= -1.0f;
 			}
-			else if (enemy_array[i].y > 1.0f)
+			else if (enemy->y > 1.0f)
 			{
-				enemy_array[i].y = 1.0f;
+				enemy->y = 1.0f;
 				vy *= -1.0f;
 			}
 
-			enemy_array[i].angle = atan2f(vy, vx);
-			enemy_array[i].speed = length(vx, vy);
+			enemy->angle = atan2f(vy, vx);
+			enemy->speed = length(vx, vy);
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, buf_enemies_id);
 		glBufferData(GL_ARRAY_BUFFER, enemy_maximum_number * sizeof(enemy_t),
@@ -377,6 +437,44 @@ int main(void)
 
 		#undef SHIP_COLLIDE_RADIUS
 		#undef ENEMY_RADIUS
+
+		/* Update the parts */
+		for (unsigned int i = 0; i < part_number; i++)
+		{
+			part_t* part = &part_array[i];
+
+			if (part->life_time == 0)
+			{
+				/* The particle dies */
+				*part = part_array[--part_number];
+				continue;
+			}
+			part->life_time--;
+			part->radius = part->radius_max *
+				((float)part->life_time / (float)part->life_time_max);
+
+			float vx = cosf(part->angle) * part->speed;
+			float vy = sinf(part->angle) * part->speed;
+
+			part->x += vx;
+			part->y += vy;
+
+			/* Out of the world */
+			if (part->x < -1.0f - part->radius ||
+				part->x > 1.0f + part->radius ||
+				part->y < -1.0f - part->radius ||
+				part->y > 1.0f + part->radius)
+			{
+				/* The particle dies */
+				*part = part_array[--part_number];
+				continue;
+			}
+
+			part->draw_angle += part->rotation;
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, buf_parts_id);
+		glBufferData(GL_ARRAY_BUFFER, part_maximum_number * sizeof(part_t),
+			part_array, GL_DYNAMIC_DRAW);
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -444,22 +542,22 @@ int main(void)
 		if (bullet_number > 0)
 		{
 			#define ATTRIB_LOCATION_POS ((GLuint)0)
-			#define ATTRIB_LOCATION_COLOR ((GLuint)1)
+			#define ATTRIB_LOCATION_SAFE_TIME ((GLuint)1)
 			#define ATTRIB_LOCATION_ANGLE ((GLuint)2)
 			#define ATTRIB_LOCATION_TAIL_POS ((GLuint)3)
 
 			glViewport(400, 0, 800, 800);
 			glUseProgram(g_shprog_draw_bullets);
 			glEnableVertexAttribArray(ATTRIB_LOCATION_POS);
-			glEnableVertexAttribArray(ATTRIB_LOCATION_COLOR);
+			glEnableVertexAttribArray(ATTRIB_LOCATION_SAFE_TIME);
 			glEnableVertexAttribArray(ATTRIB_LOCATION_ANGLE);
 			glEnableVertexAttribArray(ATTRIB_LOCATION_TAIL_POS);
 			
 			glBindBuffer(GL_ARRAY_BUFFER, buf_bullets_id);
 			glVertexAttribPointer(ATTRIB_LOCATION_POS, 2, GL_FLOAT,
 				GL_FALSE, sizeof(bullet_t), (void*)offsetof(bullet_t, x));
-			glVertexAttribPointer(ATTRIB_LOCATION_COLOR, 3, GL_FLOAT,
-				GL_FALSE, sizeof(bullet_t), (void*)offsetof(bullet_t, r));
+			glVertexAttribPointer(ATTRIB_LOCATION_SAFE_TIME, 1, GL_UNSIGNED_INT,
+				GL_FALSE, sizeof(bullet_t), (void*)offsetof(bullet_t, safe_time));
 			glVertexAttribPointer(ATTRIB_LOCATION_ANGLE, 1, GL_FLOAT,
 				GL_FALSE, sizeof(bullet_t), (void*)offsetof(bullet_t, angle));
 			glVertexAttribPointer(ATTRIB_LOCATION_TAIL_POS, 2, GL_FLOAT,
@@ -468,19 +566,60 @@ int main(void)
 			glDrawArrays(GL_POINTS, 0, bullet_number);
 			
 			glDisableVertexAttribArray(ATTRIB_LOCATION_POS);
-			glDisableVertexAttribArray(ATTRIB_LOCATION_COLOR);
+			glDisableVertexAttribArray(ATTRIB_LOCATION_SAFE_TIME);
 			glDisableVertexAttribArray(ATTRIB_LOCATION_ANGLE);
 			glDisableVertexAttribArray(ATTRIB_LOCATION_TAIL_POS);
 			glUseProgram((GLuint)0);
 
 			#undef ATTRIB_LOCATION_POS
-			#undef ATTRIB_LOCATION_COLOR
+			#undef ATTRIB_LOCATION_SAFE_TIME
 			#undef ATTRIB_LOCATION_ANGLE
 			#undef ATTRIB_LOCATION_TAIL_POS
 		}
 
+		/* Render the particles */
+		if (part_number > 0)
+		{
+			#define ATTRIB_LOCATION_POS ((GLuint)0)
+			#define ATTRIB_LOCATION_COLOR ((GLuint)1)
+			#define ATTRIB_LOCATION_ANGLE ((GLuint)2)
+			#define ATTRIB_LOCATION_RADIUS ((GLuint)3)
+
+			glViewport(400, 0, 800, 800);
+			glUseProgram(g_shprog_draw_parts);
+			glEnableVertexAttribArray(ATTRIB_LOCATION_POS);
+			glEnableVertexAttribArray(ATTRIB_LOCATION_COLOR);
+			glEnableVertexAttribArray(ATTRIB_LOCATION_ANGLE);
+			glEnableVertexAttribArray(ATTRIB_LOCATION_RADIUS);
+			
+			glBindBuffer(GL_ARRAY_BUFFER, buf_parts_id);
+			glVertexAttribPointer(ATTRIB_LOCATION_POS, 2, GL_FLOAT,
+				GL_FALSE, sizeof(part_t), (void*)offsetof(part_t, x));
+			glVertexAttribPointer(ATTRIB_LOCATION_COLOR, 3, GL_FLOAT,
+				GL_FALSE, sizeof(part_t), (void*)offsetof(part_t, r));
+			glVertexAttribPointer(ATTRIB_LOCATION_ANGLE, 1, GL_FLOAT,
+				GL_FALSE, sizeof(part_t), (void*)offsetof(part_t, draw_angle));
+			glVertexAttribPointer(ATTRIB_LOCATION_RADIUS, 1, GL_FLOAT,
+				GL_FALSE, sizeof(part_t), (void*)offsetof(part_t, radius));
+
+			glDrawArrays(GL_POINTS, 0, part_number);
+			
+			glDisableVertexAttribArray(ATTRIB_LOCATION_POS);
+			glDisableVertexAttribArray(ATTRIB_LOCATION_COLOR);
+			glDisableVertexAttribArray(ATTRIB_LOCATION_ANGLE);
+			glDisableVertexAttribArray(ATTRIB_LOCATION_RADIUS);
+			glUseProgram((GLuint)0);
+
+			#undef ATTRIB_LOCATION_POS
+			#undef ATTRIB_LOCATION_COLOR
+			#undef ATTRIB_LOCATION_ANGLE
+			#undef ATTRIB_LOCATION_RADIUS
+		}
+
 		SDL_GL_SwapWindow(g_window);
 	}
+
+	rg_destroy(g_rg);
 
 	glDeleteVertexArrays(1, &vao_id);
 	cleanup_g_graphics();

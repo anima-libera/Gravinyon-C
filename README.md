@@ -6,6 +6,8 @@ like a planet is attracted by its sun.
 
 ## TODO
 
+- Code quality
+  - Destroy the shader programs at the end on execution
 - Audio
   - Set up SDL Sounds
   - Play sounds for like shooting, killing, dying, etc.
@@ -13,7 +15,7 @@ like a planet is attracted by its sun.
 - Background
   - Generate cool looking cloudish space thing going left
   - Add some stars going left too
-- Paricles
+- Particles
   - Set up a particle system
   - Add particle effects for killing, dying, etc.
 - Ship
