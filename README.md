@@ -6,6 +6,8 @@ like a planet is attracted by its sun.
 
 ## TODO
 
+- CLEAN THE AUDIO CODE
+
 - Code quality
   - Destroy the shader programs at the end on execution
 - Audio
@@ -16,8 +18,7 @@ like a planet is attracted by its sun.
   - Generate cool looking cloudish space thing going left
   - Add some stars going left too
 - Particles
-  - Set up a particle system
-  - Add particle effects for killing, dying, etc.
+  - Add particle effects for dying, etc.
 - Ship
   - Make the ship face the direction it is going
   - Add a small floating diamond that looks at the cursor and shoots
@@ -28,5 +29,4 @@ like a planet is attracted by its sun.
   - Make it rotate
   - Add a little animation for shooting and stuff
 - Bullets
-  - Add a "no self damages" time
   - Show it with like the bullets' color

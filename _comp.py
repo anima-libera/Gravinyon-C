@@ -58,38 +58,57 @@ if option_help:
 	print(__doc__.strip().format(this_script = python + sys.argv[0]))
 	sys.exit(0)
 
-# Embed content
+# Embedded content
 embedded_header_file_name = "embedded.h" # See this file for some explanations
-embedded_source_file_name = "embedded.c"
-embed_re = r"EMBEDDED\s*\(\s*\"([^\"]+)\"\s*\)\s*([^\s][^;]+[^\s])\s*;"
-def escaped_file_content(filepath):
+embedded_source_file_name = "embedded.c" # This one will be overwritten
+embedded_re = r"EMBEDDED\s*\(\s*\"([^\"]+)\"\s*,\s*(TEXT|BINARY|SIZE)\s*\)\s*([^\s][^;]+[^\s])\s*;"
+def escape_as_string(string):
+	return "\"" + string.translate({
+		ord("\""): "\\\"", ord("\\"): "\\\\",
+		ord("\n"): "\\n", ord("\t"): "\\t"}) + "\""
+def escape_as_binary(byte_array):
+	return "{" + ", ".join([hex(b) for b in byte_array]) + "}"
+def just_the_size(byte_array):
+	return str(len(byte_array))
+def escape_file_content(filepath, escape_mode):
 	if option_debug:
-		print("Embed file \"{}\"".format(filepath))
+		print(f"Embed file \"{filepath}\" escaped as {escape_mode}")
 	try:
-		with open(filepath, "r") as file:
-			return file.read().translate({
-				ord("\""): "\\\"", ord("\\"): "\\\\",
-				ord("\n"): "\\n", ord("\t"): "\\t"})
+		opening_mode, escape_function = {
+			"TEXT": ("rt", escape_as_string),
+			"BINARY": ("rb", escape_as_binary),
+			"SIZE": ("rb", just_the_size),
+		}[escape_mode]
+		with open(filepath, opening_mode) as file:
+			return escape_function(file.read())
 	except FileNotFoundError as error:
 		print("\x1b[31mEmbedded file error:\x1b[39m " +
 			"The embedded content generator couldn't find the file " +
-			"\"{}\" used in an EMBEDDED macro in the ".format(filepath) +
-			"\"{}\" header file.".format(embedded_header_file_name))
+			f"\"{filepath}\" used in an EMBEDDED macro in the " +
+			f"\"{embedded_header_file_name}\" header file.")
 		raise error
-em_content = []
-with open(os.path.join(src_dir_name, embedded_header_file_name), "r") as ehf:
-	for match in re.finditer(embed_re, ehf.read(), flags = re.MULTILINE):
-		em_content.append("/* Content of \"{}\". */".format(match.group(1)))
-		em_content.append("{} = \"{}\";".format(match.group(2),
-			escaped_file_content(src_dir_name + "/" + match.group(1))))
-		em_content.append("")
-with open(os.path.join(src_dir_name, embedded_source_file_name), "w") as esf:
-	esf.write("\n")
-	esf.write("/* This file is overwritten at each compilation.\n")
-	esf.write(" * Do not modify, see \"{}\" ".format(
-		embedded_header_file_name))
-	esf.write("or \"_comp.py\" instead. */\n\n")
-	esf.write("\n".join(em_content)) # There is a trailing newline it's ok
+generated_c = []
+generated_c.append("")
+generated_c.append("/* This file is overwritten at each compilation.")
+generated_c.append(f"* Do not modify, see \"{embedded_header_file_name}\"" +
+	"or \"_comp.py\" instead. */")
+generated_c.append("")
+generated_c.append("")
+embedded_header_path = os.path.join(src_dir_name, embedded_header_file_name)
+with open(embedded_header_path, "r") as embedded_header_file:
+	for match in re.finditer(embedded_re, embedded_header_file.read()):
+		partial_file_path = match.group(1)
+		file_path = os.path.join(src_dir_name, partial_file_path)
+		excape_mode = match.group(2)
+		escaped_content = escape_file_content(file_path, excape_mode)
+		variable_declaration = match.group(3)
+		what = "Size" if excape_mode == "SIZE" else "Content"
+		generated_c.append(f"/* {what} of \"{partial_file_path}\". */")
+		generated_c.append(f"{variable_declaration} = {escaped_content};")
+		generated_c.append("")
+embedded_source_path = os.path.join(src_dir_name, embedded_source_file_name)
+with open(embedded_source_path, "w") as embedded_source_file:
+	embedded_source_file.write("\n".join(generated_c))
 
 # List src files
 src_file_names = []

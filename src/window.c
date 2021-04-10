@@ -11,7 +11,7 @@ SDL_GLContext g_opengl_context = NULL;
 
 int init_g_graphics(void)
 {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0)
 	{
 		error_sdl2_fail("SDL_Init");
 		return -1;
