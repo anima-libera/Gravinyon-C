@@ -33,7 +33,11 @@ EMBEDDED("shaders/parts.vert", TEXT) const char g_shader_parts_vert[];
 EMBEDDED("shaders/parts.geom", TEXT) const char g_shader_parts_geom[];
 EMBEDDED("shaders/parts.frag", TEXT) const char g_shader_parts_frag[];
 
-EMBEDDED("assets/pew.wav", BINARY) const unsigned char g_sound_pew[];
-EMBEDDED("assets/pew.wav", SIZE) const unsigned int g_sound_pew_size;
+EMBEDDED("assets/pew.wav", BINARY) const unsigned char g_wav_pew[];
+EMBEDDED("assets/pew.wav", SIZE) const unsigned int g_wav_pew_size;
+EMBEDDED("assets/boom.wav", BINARY) const unsigned char g_wav_boom[];
+EMBEDDED("assets/boom.wav", SIZE) const unsigned int g_wav_boom_size;
+EMBEDDED("assets/die.wav", BINARY) const unsigned char g_wav_die[];
+EMBEDDED("assets/die.wav", SIZE) const unsigned int g_wav_die_size;
 
 #endif /* GRAVINYON_HEADER_EMBEDDED_ */

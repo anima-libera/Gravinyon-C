@@ -5,6 +5,7 @@
 #include "embedded.h"
 #include "utils.h"
 #include "random.h"
+#include "audio.h"
 
 struct ship_t
 {
@@ -52,18 +53,6 @@ inline static float length(float x, float y)
 	return sqrtf(square_length(x, y));
 }
 
-void test_callback(void* ptr, uint8_t* stream, int length)
-{
-	(void)ptr;
-
-	const unsigned int sample_count = length / sizeof(float);
-
-	for (unsigned int i = 0; i < sample_count; i++)
-	{
-		((float*)stream)[i] = 0.07f * sinf(TAU * (float)i / 100.0f);
-	}
-}
-
 int main(void)
 {
 	if (init_g_graphics() != 0)
@@ -78,50 +67,12 @@ int main(void)
 
 	shprog_build_all();
 
+	if (init_g_audio() != 0)
+	{
+		return -1;
+	}
+
 	g_rg = rg_create_timeseeded(0);
-
-	#
-	#
-
-	/* TEST AREA BEGINNING */
-
-	SDL_RWops* rw = SDL_RWFromConstMem(g_sound_pew, g_sound_pew_size);
-
-	Uint8* audio_buffer;
-	Uint32 audio_buffer_length;
-	SDL_AudioSpec audio_spec;
-	SDL_LoadWAV_RW(rw, 0, &audio_spec, &audio_buffer, &audio_buffer_length);
-
-	SDL_AudioDeviceID audio_device_id =
-		SDL_OpenAudioDevice(NULL, 0, &audio_spec, NULL, 0);
-
-	int success_uwu;
-
-	success_uwu = SDL_QueueAudio(audio_device_id,
-		audio_buffer, audio_buffer_length);
-	SDL_PauseAudioDevice(audio_device_id, SDL_FALSE);
-
-	#if 0
-
-	SDL_AudioSpec audio_spec = {
-		.freq = 96000,
-		.format = AUDIO_F32SYS,
-		.channels = 1,
-		.samples = 4096,
-		.callback = test_callback,
-	};
-
-	SDL_AudioDeviceID audio_device_id = SDL_OpenAudioDevice(
-		NULL, 0, &audio_spec, &audio_spec, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
-
-	SDL_PauseAudioDevice(audio_device_id, SDL_FALSE);
-
-	#endif
-
-	/* TEST AREA END */
-
-	#
-	#
 
 	/* Initialize the ship */
 	ship_t ship = {.x = 0.5f, .y = 0.5f, .reload_max = 5};
@@ -257,6 +208,7 @@ int main(void)
 			if (cursor_dist < SHIP_COLLIDE_RADIUS)
 			{
 				printf("TODO: die\n");
+				play_sound(g_sound_die);
 				ship.x = 0.5f;
 				ship.y = 0.5f;
 				ship.speed = 0.0f;
@@ -271,6 +223,7 @@ int main(void)
 				if (dist < SHIP_COLLIDE_RADIUS + ENEMY_RADIUS)
 				{
 					printf("TODO: die\n");
+					play_sound(g_sound_die);
 					ship.x = 0.5f;
 					ship.y = 0.5f;
 					ship.speed = 0.0f;
@@ -289,9 +242,7 @@ int main(void)
 			{
 				ship.reload = ship.reload_max;
 
-				success_uwu = SDL_QueueAudio(audio_device_id,
-					audio_buffer, audio_buffer_length);
-				SDL_PauseAudioDevice(audio_device_id, SDL_FALSE);
+				play_sound(g_sound_pew);
 
 				#if 0
 				#define RECOIL_FACTOR 0.003f
@@ -405,6 +356,8 @@ int main(void)
 					float dist = length(enemy->x - s_x, enemy->y - s_y);
 					if (dist < ENEMY_RADIUS)
 					{
+						play_sound(g_sound_boom);
+
 						/* Spaw particles */
 						unsigned int count = rg_uint(g_rg, 10, 30);
 						for (unsigned int k = 0; k < count; k++)
@@ -460,6 +413,7 @@ int main(void)
 				if (ship_dist < SHIP_COLLIDE_RADIUS)
 				{
 					printf("TODO: die\n");
+					play_sound(g_sound_die);
 					ship.x = 0.5f;
 					ship.y = 0.5f;
 					ship.speed = 0.0f;
@@ -698,8 +652,9 @@ int main(void)
 	}
 
 	rg_destroy(g_rg);
-
+	cleanup_g_audio();
 	glDeleteVertexArrays(1, &vao_id);
+	shprog_destroy_all();
 	cleanup_g_graphics();
 	return 0;
 }
