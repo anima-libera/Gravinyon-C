@@ -6,13 +6,7 @@ like a planet is attracted by its sun.
 
 ## TODO
 
-- CLEAN THE AUDIO CODE
-
-- Code quality
-  - Destroy the shader programs at the end on execution
 - Audio
-  - Set up SDL Sounds
-  - Play sounds for like shooting, killing, dying, etc.
   - Play some music
 - Background
   - Generate cool looking cloudish space thing going left

@@ -16,7 +16,7 @@ extern GLuint g_shprog_draw_enemies;
 extern GLuint g_shprog_draw_bullets;
 extern GLuint g_shprog_draw_parts;
 
-void shprog_build_all(void);
+int shprog_build_all(void);
 void shprog_destroy_all(void);
 
 #endif /* GRAVINYON_HEADER_SHADERS_ */

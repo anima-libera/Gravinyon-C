@@ -89,24 +89,41 @@ GLuint g_shprog_draw_enemies = 0;
 GLuint g_shprog_draw_bullets = 0;
 GLuint g_shprog_draw_parts = 0;
 
-void shprog_build_all(void)
+int shprog_build_all(void)
 {
 	g_shprog_draw_ship = shprog_build(
 		g_shader_ship_vert,
 		g_shader_ship_geom,
 		g_shader_ship_frag);
+	if (g_shprog_draw_ship == 0)
+	{
+		return -1;
+	}
 	g_shprog_draw_enemies = shprog_build(
 		g_shader_enemies_vert,
 		g_shader_enemies_geom,
 		g_shader_enemies_frag);
+	if (g_shprog_draw_enemies == 0)
+	{
+		return -1;
+	}
 	g_shprog_draw_bullets = shprog_build(
 		g_shader_bullets_vert,
 		g_shader_bullets_geom,
 		g_shader_bullets_frag);
+	if (g_shprog_draw_bullets == 0)
+	{
+		return -1;
+	}
 	g_shprog_draw_parts = shprog_build(
 		g_shader_parts_vert,
 		g_shader_parts_geom,
 		g_shader_parts_frag);
+	if (g_shprog_draw_parts == 0)
+	{
+		return -1;
+	}
+	return 0;
 }
 
 void shprog_destroy_all(void)
