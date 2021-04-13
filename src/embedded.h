@@ -32,6 +32,11 @@ EMBEDDED("shaders/bullets.frag", TEXT) const char g_shader_bullets_frag[];
 EMBEDDED("shaders/parts.vert", TEXT) const char g_shader_parts_vert[];
 EMBEDDED("shaders/parts.geom", TEXT) const char g_shader_parts_geom[];
 EMBEDDED("shaders/parts.frag", TEXT) const char g_shader_parts_frag[];
+EMBEDDED("shaders/bg.vert", TEXT) const char g_shader_bg_vert[];
+EMBEDDED("shaders/bg.geom", TEXT) const char g_shader_bg_geom[];
+EMBEDDED("shaders/bg.frag", TEXT) const char g_shader_bg_frag[];
+EMBEDDED("shaders/stars.vert", TEXT) const char g_shader_stars_vert[];
+EMBEDDED("shaders/stars.frag", TEXT) const char g_shader_stars_frag[];
 
 EMBEDDED("assets/pew.wav", BINARY) const unsigned char g_wav_pew[];
 EMBEDDED("assets/pew.wav", SIZE) const unsigned int g_wav_pew_size;

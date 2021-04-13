@@ -44,6 +44,56 @@ struct part_t
 };
 typedef struct part_t part_t;
 
+struct star_t
+{
+	float x, y;
+	float r, g, b;
+	float size;
+	float speed;
+};
+typedef struct star_t star_t;
+
+/* Game state data */
+struct gs_t
+{
+	ship_t ship;
+	GLuint buf_ship_id;
+
+	unsigned int enemy_maximum_number;
+	unsigned int enemy_number;
+	enemy_t* enemy_array;
+	GLuint buf_enemies_id;
+
+	unsigned int bullet_maximum_number;
+	unsigned int bullet_number;
+	bullet_t* bullet_array;
+	GLuint buf_bullets_id;
+
+	unsigned int part_maximum_number;
+	unsigned int part_number;
+	part_t* part_array;
+	GLuint buf_parts_id;
+
+	unsigned int star_maximum_number;
+	unsigned int star_number;
+	star_t* star_array;
+	GLuint buf_stars_id;
+};
+typedef struct gs_t gs_t;
+
+struct commands_t
+{
+	int is_firing;
+	float cursor_x, cursor_y;
+};
+typedef struct commands_t commands_t;
+
+struct bg_t
+{
+	float time;
+};
+typedef struct bg_t bg_t;
+
 inline static float square_length(float x, float y)
 {
 	return (x * x) + (y * y);
@@ -54,6 +104,20 @@ inline static float length(float x, float y)
 }
 
 static GLuint s_vao_id;
+
+int init_g_all(void);
+void cleanup_g_all(void);
+void gs_init(gs_t* gs);
+enemy_t* gs_alloc_enemy(gs_t* gs);
+bullet_t* gs_alloc_bullet(gs_t* gs);
+part_t* gs_alloc_part(gs_t* gs);
+star_t* gs_alloc_star(gs_t* gs);
+void gs_spawn_enemies(gs_t* gs);
+void gs_perform_iter(gs_t* gs, commands_t* commands);
+void bg_render(bg_t* bg);
+void gs_perform_iter_stars(gs_t* gs);
+void gs_render_stars(gs_t* gs);
+void gs_render(gs_t* gs);
 
 int init_g_all(void)
 {
@@ -89,29 +153,6 @@ void cleanup_g_all(void)
 	shprog_destroy_all();
 	cleanup_g_graphics();
 }
-
-/* Game state data */
-struct gs_t
-{
-	ship_t ship;
-	GLuint buf_ship_id;
-
-	unsigned int enemy_maximum_number;
-	unsigned int enemy_number;
-	enemy_t* enemy_array;
-	GLuint buf_enemies_id;
-
-	unsigned int bullet_maximum_number;
-	unsigned int bullet_number;
-	bullet_t* bullet_array;
-	GLuint buf_bullets_id;
-
-	unsigned int part_maximum_number;
-	unsigned int part_number;
-	part_t* part_array;
-	GLuint buf_parts_id;
-};
-typedef struct gs_t gs_t;
 
 void gs_init(gs_t* gs)
 {
@@ -150,29 +191,92 @@ void gs_init(gs_t* gs)
 	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_parts_id);
 	glBufferData(GL_ARRAY_BUFFER, gs->part_maximum_number * sizeof(part_t),
 		gs->part_array, GL_DYNAMIC_DRAW);
+
+	/* Stars */
+	gs->star_maximum_number = 256;
+	gs->star_number = 0;
+	gs->star_array = xcalloc(gs->star_maximum_number, sizeof(star_t));
+	glGenBuffers(1, &gs->buf_stars_id);
+	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_stars_id);
+	glBufferData(GL_ARRAY_BUFFER, gs->star_maximum_number * sizeof(star_t),
+		gs->star_array, GL_DYNAMIC_DRAW);
+}
+
+#ifdef DEBUG
+	#define DEBUG_PRINTF_1(format_, arg1_) \
+		fprintf(stderr, format_, arg1_)
+#else
+	#define DEBUG_PRINTF_1(format_, arg1_) \
+		do { } while (0)
+#endif
+
+#define DYNAMIC_VECTOR_RESIZE_IF_NEEDED(elem_count_, elem_count_max_, ptr_, elem_type_) \
+	do { \
+		if (elem_count_ == elem_count_max_) \
+		{ \
+			unsigned int new_maximum_wanted = \
+				((float)elem_count_max_ + 2.3f) * 1.3f; \
+			elem_type_* new_array = xrealloc(ptr_, \
+				new_maximum_wanted * sizeof(elem_type_)); \
+			if (new_array == NULL) \
+			{ \
+				fprintf(stderr, "TODO: handle error\n"); \
+			} \
+			else \
+			{ \
+				DEBUG_PRINTF_1("Resize " #ptr_ " to %d\n", new_maximum_wanted); \
+			} \
+			ptr_ = new_array; \
+			elem_count_max_ = new_maximum_wanted; \
+		} \
+	} while (0)
+
+enemy_t* gs_alloc_enemy(gs_t* gs)
+{
+	DYNAMIC_VECTOR_RESIZE_IF_NEEDED(
+		gs->enemy_number, gs->enemy_maximum_number, gs->enemy_array, enemy_t);
+	enemy_t* new_enemy = &gs->enemy_array[gs->enemy_number++];
+	return new_enemy;
+}
+
+bullet_t* gs_alloc_bullet(gs_t* gs)
+{
+	DYNAMIC_VECTOR_RESIZE_IF_NEEDED(
+		gs->bullet_number, gs->bullet_maximum_number, gs->bullet_array, bullet_t);
+	bullet_t* new_bullet = &gs->bullet_array[gs->bullet_number++];
+	return new_bullet;
+}
+
+part_t* gs_alloc_part(gs_t* gs)
+{
+	DYNAMIC_VECTOR_RESIZE_IF_NEEDED(
+		gs->part_number, gs->part_maximum_number, gs->part_array, part_t);
+	part_t* new_part = &gs->part_array[gs->part_number++];
+	return new_part;
+}
+
+star_t* gs_alloc_star(gs_t* gs)
+{
+	DYNAMIC_VECTOR_RESIZE_IF_NEEDED(
+		gs->star_number, gs->star_maximum_number, gs->star_array, star_t);
+	star_t* new_star = &gs->star_array[gs->star_number++];
+	return new_star;
 }
 
 void gs_spawn_enemies(gs_t* gs)
 {
-	for (unsigned int i = 0; i < 13; i++)
+	for (unsigned int i = 0; i < 4; i++)
 	{
-		enemy_t* new_enemy = &gs->enemy_array[gs->enemy_number++];
+		enemy_t* new_enemy = gs_alloc_enemy(gs);
 		new_enemy->x = -0.5f;
 		new_enemy->y = -0.5f;
 		new_enemy->r = 0.0f;
 		new_enemy->g = 1.0f;
 		new_enemy->b = 1.0f;
 		new_enemy->angle = rg_float(g_rg, 0.0f, TAU);
-		new_enemy->speed = rg_float(g_rg, 0.001f, 0.01f);
+		new_enemy->speed = rg_float(g_rg, 0.001f, 0.015f);
 	}
 }
-
-struct commands_t
-{
-	int is_firing;
-	float cursor_x, cursor_y;
-};
-typedef struct commands_t commands_t;
 
 void gs_perform_iter(gs_t* gs, commands_t* commands)
 {
@@ -196,7 +300,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 			unsigned int count = rg_uint(g_rg, 50, 70);
 			for (unsigned int k = 0; k < count; k++)
 			{
-				part_t* new_part = &gs->part_array[gs->part_number++];
+				part_t* new_part = gs_alloc_part(gs);
 				new_part->x = gs->ship.x;
 				new_part->y = gs->ship.y;
 				new_part->r = 1.0f;
@@ -235,7 +339,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 				unsigned int count = rg_uint(g_rg, 50, 70);
 				for (unsigned int k = 0; k < count; k++)
 				{
-					part_t* new_part = &gs->part_array[gs->part_number++];
+					part_t* new_part = gs_alloc_part(gs);
 					new_part->x = gs->ship.x;
 					new_part->y = gs->ship.y;
 					new_part->r = 1.0f;
@@ -283,7 +387,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 			#undef RECOIL_FACTOR
 			#endif
 
-			bullet_t* new_bullet = &gs->bullet_array[gs->bullet_number++];
+			bullet_t* new_bullet = gs_alloc_bullet(gs);
 			new_bullet->x =
 				gs->ship.x + cosf(cursor_angle) * SHIP_COLLIDE_RADIUS;
 			new_bullet->y =
@@ -394,7 +498,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 					unsigned int count = rg_uint(g_rg, 10, 30);
 					for (unsigned int k = 0; k < count; k++)
 					{
-						part_t* new_part = &gs->part_array[gs->part_number++];
+						part_t* new_part = gs_alloc_part(gs);
 						new_part->x = enemy->x;
 						new_part->y = enemy->y;
 						new_part->r = 1.0f;
@@ -449,7 +553,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 				unsigned int count = rg_uint(g_rg, 50, 70);
 				for (unsigned int k = 0; k < count; k++)
 				{
-					part_t* new_part = &gs->part_array[gs->part_number++];
+					part_t* new_part = gs_alloc_part(gs);
 					new_part->x = gs->ship.x;
 					new_part->y = gs->ship.y;
 					new_part->r = 1.0f;
@@ -565,10 +669,93 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		gs->part_array, GL_DYNAMIC_DRAW);
 }
 
+void bg_render(bg_t* bg)
+{
+	/* Render the space background */
+	glProgramUniform1f(g_shprog_draw_bg, 0, bg->time);
+	glViewport(400, 0, 800, 800);
+	glUseProgram(g_shprog_draw_bg);
+	glDrawArrays(GL_POINTS, 0, 1);
+	glUseProgram((GLuint)0);
+}
+
+void gs_perform_iter_stars(gs_t* gs)
+{
+	/* Spaw stars */
+	while (rg_uint(g_rg, 0, 20) == 0)
+	{
+		star_t* star = gs_alloc_star(gs);
+		star->x = 1.0f;
+		star->y = rg_float(g_rg, -1.0f, 1.0f);
+		star->r = 1.0f;
+		star->g = 1.0f;
+		star->b = 1.0f;
+		star->size = rg_uint(g_rg, 0, 4) == 0 ? 2.0f : 1.0f;
+		star->speed = rg_float(g_rg, 0.001f, 0.01f);
+	}
+
+	/* Update the stars */
+	for (unsigned int i = 0; i < gs->star_number; i++)
+	{
+		star_t* star = &gs->star_array[i];
+
+		star->x -= star->speed;
+
+		/* Out of the world */
+		if (star->x < -1.0f - star->size)
+		{
+			/* The star dies */
+			*star = gs->star_array[--gs->star_number];
+			continue;
+		}
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_stars_id);
+	glBufferData(GL_ARRAY_BUFFER, gs->star_maximum_number * sizeof(star_t),
+		gs->star_array, GL_DYNAMIC_DRAW);
+}
+
+void gs_render_stars(gs_t* gs)
+{
+	/* Render the stars */
+	if (gs->star_number > 0)
+	{
+		#define ATTRIB_LOCATION_POS ((GLuint)0)
+		#define ATTRIB_LOCATION_SIZE ((GLuint)1)
+		#define ATTRIB_LOCATION_COLOR ((GLuint)2)
+
+		glViewport(400, 0, 800, 800);
+		glUseProgram(g_shprog_draw_stars);
+		glEnableVertexAttribArray(ATTRIB_LOCATION_POS);
+		glEnableVertexAttribArray(ATTRIB_LOCATION_SIZE);
+		glEnableVertexAttribArray(ATTRIB_LOCATION_COLOR);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, gs->buf_stars_id);
+		glVertexAttribPointer(ATTRIB_LOCATION_POS, 2, GL_FLOAT,
+			GL_FALSE, sizeof(star_t), (void*)offsetof(star_t, x));
+		glVertexAttribPointer(ATTRIB_LOCATION_SIZE, 1, GL_FLOAT,
+			GL_FALSE, sizeof(star_t), (void*)offsetof(star_t, size));
+		glVertexAttribPointer(ATTRIB_LOCATION_COLOR, 3, GL_FLOAT,
+			GL_FALSE, sizeof(star_t), (void*)offsetof(star_t, r));
+
+		glDrawArrays(GL_POINTS, 0, gs->star_number);
+		
+		glDisableVertexAttribArray(ATTRIB_LOCATION_POS);
+		glDisableVertexAttribArray(ATTRIB_LOCATION_SIZE);
+		glDisableVertexAttribArray(ATTRIB_LOCATION_COLOR);
+		glUseProgram((GLuint)0);
+
+		#undef ATTRIB_LOCATION_POS
+		#undef ATTRIB_LOCATION_SIZE
+		#undef ATTRIB_LOCATION_COLOR
+	}
+}
+
 void gs_render(gs_t* gs)
 {
+	#if 0
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+	#endif
 
 	/* Render the ship */
 	{
@@ -715,11 +902,13 @@ int main(void)
 		return -1;
 	}
 
-	gs_t gs;
+	gs_t gs = {0};
 
 	gs_init(&gs);
 
 	commands_t commands = {0};
+
+	bg_t bg = {0};
 	
 	int running = 1;
 	while (running)
@@ -773,8 +962,14 @@ int main(void)
 			}
 		}
 
+		bg.time += 1.0f;
+		
+
 		gs_perform_iter(&gs, &commands);
 
+		bg_render(&bg);
+		gs_perform_iter_stars(&gs);
+		gs_render_stars(&gs);
 		gs_render(&gs);
 
 		SDL_GL_SwapWindow(g_window);

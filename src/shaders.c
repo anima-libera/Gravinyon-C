@@ -88,6 +88,8 @@ GLuint g_shprog_draw_ship = 0;
 GLuint g_shprog_draw_enemies = 0;
 GLuint g_shprog_draw_bullets = 0;
 GLuint g_shprog_draw_parts = 0;
+GLuint g_shprog_draw_bg = 0;
+GLuint g_shprog_draw_stars = 0;
 
 int shprog_build_all(void)
 {
@@ -123,6 +125,22 @@ int shprog_build_all(void)
 	{
 		return -1;
 	}
+	g_shprog_draw_bg = shprog_build(
+		g_shader_bg_vert,
+		g_shader_bg_geom,
+		g_shader_bg_frag);
+	if (g_shprog_draw_bg == 0)
+	{
+		return -1;
+	}
+	g_shprog_draw_stars = shprog_build(
+		g_shader_stars_vert,
+		NULL,
+		g_shader_stars_frag);
+	if (g_shprog_draw_stars == 0)
+	{
+		return -1;
+	}
 	return 0;
 }
 
@@ -136,4 +154,8 @@ void shprog_destroy_all(void)
 	g_shprog_draw_bullets = 0;
 	glDeleteProgram(g_shprog_draw_parts);
 	g_shprog_draw_parts = 0;
+	glDeleteProgram(g_shprog_draw_bg);
+	g_shprog_draw_bg = 0;
+	glDeleteProgram(g_shprog_draw_stars);
+	g_shprog_draw_stars = 0;
 }

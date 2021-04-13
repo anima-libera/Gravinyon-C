@@ -6,13 +6,16 @@ like a planet is attracted by its sun.
 
 ## TODO
 
+- Code quality
+  - Check for the success of *every* SDL function call
+  - Separate the background from the game state
+  - Do the core loop and state thing uwu
+- Text rendering
+  - Make a tilemap of ascii chars (in 2 minues in krita or something)
+  - Render text with it
+  - Make the tilemap font cooler
 - Audio
   - Play some music
-- Background
-  - Generate cool looking cloudish space thing going left
-  - Add some stars going left too
-- Particles
-  - Add particle effects for dying, etc.
 - Ship
   - Make the ship face the direction it is going
   - Add a small floating diamond that looks at the cursor and shoots
@@ -23,4 +26,4 @@ like a planet is attracted by its sun.
   - Make it rotate
   - Add a little animation for shooting and stuff
 - Bullets
-  - Show it with like the bullets' color
+  - Show it with like the bullets' color but smooth

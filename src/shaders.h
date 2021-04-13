@@ -15,6 +15,8 @@ extern GLuint g_shprog_draw_ship;
 extern GLuint g_shprog_draw_enemies;
 extern GLuint g_shprog_draw_bullets;
 extern GLuint g_shprog_draw_parts;
+extern GLuint g_shprog_draw_bg;
+extern GLuint g_shprog_draw_stars;
 
 int shprog_build_all(void);
 void shprog_destroy_all(void);
