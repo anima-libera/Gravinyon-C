@@ -90,9 +90,8 @@ def escape_file_content(filepath, escape_mode):
 generated_c = []
 generated_c.append("")
 generated_c.append("/* This file is overwritten at each compilation.")
-generated_c.append(f"* Do not modify, see \"{embedded_header_file_name}\"" +
+generated_c.append(f" * Do not modify, see \"{embedded_header_file_name}\"" +
 	"or \"_comp.py\" instead. */")
-generated_c.append("")
 generated_c.append("")
 embedded_header_path = os.path.join(src_dir_name, embedded_header_file_name)
 with open(embedded_header_path, "r") as embedded_header_file:
@@ -102,7 +101,7 @@ with open(embedded_header_path, "r") as embedded_header_file:
 		excape_mode = match.group(2)
 		escaped_content = escape_file_content(file_path, excape_mode)
 		variable_declaration = match.group(3)
-		what = "Size" if excape_mode == "SIZE" else "Content"
+		what = "Size in bytes" if excape_mode == "SIZE" else "Content"
 		generated_c.append(f"/* {what} of \"{partial_file_path}\". */")
 		generated_c.append(f"{variable_declaration} = {escaped_content};")
 		generated_c.append("")
