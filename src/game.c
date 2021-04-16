@@ -106,8 +106,24 @@ void gs_spawn_enemies(gs_t* gs)
 
 void gs_perform_iter(gs_t* gs, commands_t* commands)
 {
-	#define SHIP_COLLIDE_RADIUS 0.023
-	#define ENEMY_RADIUS 0.020
+	float ingame_cursor_x =
+		2.0f * (
+			(float)commands->inwindow_cursor_x - (float)GAME_VIEWPORT_LEFT
+		) / (float)GAME_VIEWPORT_WIDTH - 1.0f;
+	float ingame_cursor_y =
+		(
+			2.0f * (
+				(float)GAME_VIEWPORT_TOP - (float)commands->inwindow_cursor_y
+			) + GAME_VIEWPORT_HEIGHT
+		) / (float)GAME_VIEWPORT_WIDTH;
+
+	#define INGAME_LEFT (-1.0f)
+	#define INGAME_RIGHT (1.0f)
+	#define INGAME_TOP (1.0f / GAME_ASPECT_RATIO)
+	#define INGAME_BOTTOM (-1.0f / GAME_ASPECT_RATIO)
+
+	#define SHIP_COLLIDE_RADIUS 0.013
+	#define ENEMY_RADIUS 0.012
 	
 	/* Update the ship and firing */
 	{
@@ -115,7 +131,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		float vy = sinf(gs->ship.angle) * gs->ship.speed;
 
 		float cursor_squaredist =
-			square_length(gs->ship.x - commands->cursor_x, gs->ship.y - commands->cursor_y);
+			square_length(gs->ship.x - ingame_cursor_x, gs->ship.y - ingame_cursor_y);
 		float cursor_dist = sqrtf(cursor_squaredist);
 
 		/* Collision with the cursor */
@@ -133,7 +149,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 				new_part->g = 1.0f;
 				new_part->b = 1.0f;
 				new_part->radius_max =
-					rg_float(g_rg, 0.01f, 0.03f);
+					rg_float(g_rg, 0.005f, 0.018f);
 				new_part->radius = new_part->radius_max;
 				new_part->draw_angle =
 					rg_float(g_rg, 0.0f, TAU);
@@ -172,7 +188,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 					new_part->g = 1.0f;
 					new_part->b = 1.0f;
 					new_part->radius_max =
-						rg_float(g_rg, 0.01f, 0.03f);
+						rg_float(g_rg, 0.005f, 0.018f);
 					new_part->radius = new_part->radius_max;
 					new_part->draw_angle =
 						rg_float(g_rg, 0.0f, TAU);
@@ -193,7 +209,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 			}
 		}
 
-		float cursor_angle = atan2f(commands->cursor_y - gs->ship.y, commands->cursor_x - gs->ship.x);
+		float cursor_angle = atan2f(ingame_cursor_y - gs->ship.y, ingame_cursor_x - gs->ship.x);
 
 		/* Firing mechanics */
 		if (gs->ship.reload > 0)
@@ -230,8 +246,8 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		}
 		
 		#define GRAVITY_FACTOR 0.0008f
-		vx += GRAVITY_FACTOR * (commands->cursor_x - gs->ship.x) / cursor_dist;
-		vy += GRAVITY_FACTOR * (commands->cursor_y - gs->ship.y) / cursor_dist;
+		vx += GRAVITY_FACTOR * (ingame_cursor_x - gs->ship.x) / cursor_dist;
+		vy += GRAVITY_FACTOR * (ingame_cursor_y - gs->ship.y) / cursor_dist;
 		#undef GRAVITY_FACTOR
 
 		gs->ship.x += vx;
@@ -239,24 +255,24 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 
 		/* Bounce on the edges of the world */
 		#define BOUNCE_FACTOR 0.8f
-		if (gs->ship.x < -1.0f)
+		if (gs->ship.x < INGAME_LEFT)
 		{
-			gs->ship.x = -1.0f;
+			gs->ship.x = INGAME_LEFT;
 			vx *= -BOUNCE_FACTOR;
 		}
-		else if (gs->ship.x > 1.0f)
+		else if (gs->ship.x > INGAME_RIGHT)
 		{
-			gs->ship.x = 1.0f;
+			gs->ship.x = INGAME_RIGHT;
 			vx *= -BOUNCE_FACTOR;
 		}
-		if (gs->ship.y < -1.0f)
+		if (gs->ship.y < INGAME_BOTTOM)
 		{
-			gs->ship.y = -1.0f;
+			gs->ship.y = INGAME_BOTTOM;
 			vy *= -BOUNCE_FACTOR;
 		}
-		else if (gs->ship.y > 1.0f)
+		else if (gs->ship.y > INGAME_TOP)
 		{
-			gs->ship.y = 1.0f;
+			gs->ship.y = INGAME_TOP;
 			vy *= -BOUNCE_FACTOR;
 		}
 		#undef BOUNCE_FACTOR
@@ -328,10 +344,10 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 						new_part->x = enemy->x;
 						new_part->y = enemy->y;
 						new_part->r = 1.0f;
-						new_part->g = 0.0f;
-						new_part->b = 0.0f;
+						new_part->g = 1.0f;
+						new_part->b = 1.0f;
 						new_part->radius_max =
-							rg_float(g_rg, 0.01f, 0.03f);
+							rg_float(g_rg, 0.005f, 0.018f);
 						new_part->radius = new_part->radius_max;
 						new_part->draw_angle =
 							rg_float(g_rg, 0.0f, TAU);
@@ -386,7 +402,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 					new_part->g = 1.0f;
 					new_part->b = 1.0f;
 					new_part->radius_max =
-						rg_float(g_rg, 0.01f, 0.03f);
+						rg_float(g_rg, 0.005f, 0.018f);
 					new_part->radius = new_part->radius_max;
 					new_part->draw_angle =
 						rg_float(g_rg, 0.0f, TAU);
@@ -425,24 +441,24 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		enemy->x += vx;
 		enemy->y += vy;
 
-		if (enemy->x < -1.0f)
+		if (enemy->x < INGAME_LEFT)
 		{
-			enemy->x = -1.0f;
+			enemy->x = INGAME_LEFT;
 			vx *= -1.0f;
 		}
-		else if (enemy->x > 1.0f)
+		else if (enemy->x > INGAME_RIGHT)
 		{
-			enemy->x = 1.0f;
+			enemy->x = INGAME_RIGHT;
 			vx *= -1.0f;
 		}
-		if (enemy->y < -1.0f)
+		if (enemy->y < INGAME_BOTTOM)
 		{
-			enemy->y = -1.0f;
+			enemy->y = INGAME_BOTTOM;
 			vy *= -1.0f;
 		}
-		else if (enemy->y > 1.0f)
+		else if (enemy->y > INGAME_TOP)
 		{
-			enemy->y = 1.0f;
+			enemy->y = INGAME_TOP;
 			vy *= -1.0f;
 		}
 
@@ -507,7 +523,9 @@ void gs_render(gs_t* gs)
 		#define ATTRIB_LOCATION_POS ((GLuint)0)
 		#define ATTRIB_LOCATION_DRAW_ANGLE ((GLuint)1)
 
-		glViewport(400, 0, 800, 800);
+		glViewport(
+			GAME_VIEWPORT_LEFT, GAME_VIEWPORT_TOP,
+			GAME_VIEWPORT_WIDTH, GAME_VIEWPORT_HEIGHT);
 		glUseProgram(g_shprog_draw_ship);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_POS);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_DRAW_ANGLE);
@@ -535,7 +553,9 @@ void gs_render(gs_t* gs)
 		#define ATTRIB_LOCATION_COLOR ((GLuint)1)
 		#define ATTRIB_LOCATION_ANGLE ((GLuint)2)
 
-		glViewport(400, 0, 800, 800);
+		glViewport(
+			GAME_VIEWPORT_LEFT, GAME_VIEWPORT_TOP,
+			GAME_VIEWPORT_WIDTH, GAME_VIEWPORT_HEIGHT);
 		glUseProgram(g_shprog_draw_enemies);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_POS);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_COLOR);
@@ -569,7 +589,9 @@ void gs_render(gs_t* gs)
 		#define ATTRIB_LOCATION_ANGLE ((GLuint)2)
 		#define ATTRIB_LOCATION_TAIL_POS ((GLuint)3)
 
-		glViewport(400, 0, 800, 800);
+		glViewport(
+			GAME_VIEWPORT_LEFT, GAME_VIEWPORT_TOP,
+			GAME_VIEWPORT_WIDTH, GAME_VIEWPORT_HEIGHT);
 		glUseProgram(g_shprog_draw_bullets);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_POS);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_SAFE_TIME);
@@ -608,7 +630,9 @@ void gs_render(gs_t* gs)
 		#define ATTRIB_LOCATION_ANGLE ((GLuint)2)
 		#define ATTRIB_LOCATION_RADIUS ((GLuint)3)
 
-		glViewport(400, 0, 800, 800);
+		glViewport(
+			GAME_VIEWPORT_LEFT, GAME_VIEWPORT_TOP,
+			GAME_VIEWPORT_WIDTH, GAME_VIEWPORT_HEIGHT);
 		glUseProgram(g_shprog_draw_parts);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_POS);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_COLOR);

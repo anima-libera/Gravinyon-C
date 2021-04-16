@@ -28,10 +28,8 @@ void apply_input_commands(commands_t* commands)
 			break;
 
 			case SDL_MOUSEMOTION:
-				commands->cursor_x =
-					((float)event.motion.x - 400.0f) / 400.0f - 1.0f;
-				commands->cursor_y =
-					-((float)event.motion.y - 800.0f) / 400.0f - 1.0f;
+				commands->inwindow_cursor_x = event.motion.x;
+				commands->inwindow_cursor_y = event.motion.y;
 			break;
 
 			case SDL_MOUSEBUTTONDOWN:

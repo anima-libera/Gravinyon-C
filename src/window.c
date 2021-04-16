@@ -7,6 +7,8 @@
 SDL_Window* g_window = NULL;
 SDL_GLContext g_opengl_context = NULL;
 
+static GLuint s_vao_id;
+
 #define WINDOW_NAME "Gravinyon"
 
 int init_g_graphics(void)
@@ -57,16 +59,20 @@ int init_g_graphics(void)
 		fprintf(stderr, "GLEW error: glewInit failed: \"%s\"\n",
 			glewGetErrorString(gnew_init_result));
 	}
+	enable_opengl_dbgmsg();
 	glEnable(GL_MULTISAMPLE);
 	if (SDL_GL_SetSwapInterval(-1) != 0)
 	{
 		SDL_GL_SetSwapInterval(1);
 	}
+	glGenVertexArrays(1, &s_vao_id);
+	glBindVertexArray(s_vao_id);
 	return 0;
 }
 
 void cleanup_g_graphics(void)
 {
+	glDeleteVertexArrays(1, &s_vao_id);
 	SDL_GL_DeleteContext(g_opengl_context);
 	g_opengl_context = NULL;
 	SDL_DestroyWindow(g_window);

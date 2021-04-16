@@ -10,7 +10,6 @@ Programmed by Anima Libera, see github.com/anima-libera uwu.
 
 - Code quality
   - Check for the success of *every* SDL function call
-  - Separate the background from the game state
   - Do the core loop and state thing uwu
 - Text rendering
   - Make a tilemap of ascii chars (in 2 minues in krita or something)

@@ -1,5 +1,6 @@
 
 #version 430 core
+layout(location = 0) uniform float u_aspect_ratio;
 layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
 in int v_safe_time[];
@@ -8,7 +9,7 @@ in vec2 v_tail_pos[];
 out vec3 g_color;
 
 #define TAU 6.28318530717
-#define BULLET_RADIUS 0.006
+#define BULLET_RADIUS 0.004
 
 void main()
 {
@@ -22,11 +23,13 @@ void main()
 	{
 		gl_Position = gl_in[0].gl_Position +
 			vec4(cos(angle), sin(angle), 0.0, 0.0) * BULLET_RADIUS;
+		gl_Position.y *= u_aspect_ratio;
 		EmitVertex();
 		angle += TAU/3.0;
 	}
 
 	gl_Position = vec4(v_tail_pos[0], 0.0, 1.0);
+	gl_Position.y *= u_aspect_ratio;
 	EmitVertex();
 
 	EndPrimitive();

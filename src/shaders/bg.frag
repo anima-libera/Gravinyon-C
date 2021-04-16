@@ -12,7 +12,6 @@ float noise(vec4 v)
 
 float interpolate(float ratio, float inf, float sup)
 {
-	//float smoothratio = smoothstep(0.0, 1.0, ratio);
 	float smoothratio = (1.0 - cos(ratio * TAU / 2.0)) / 2.0;
 	return smoothratio * inf + (1.0 - smoothratio) * sup;
 }

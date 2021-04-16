@@ -1,5 +1,6 @@
 
 #version 430 core
+layout(location = 0) uniform float u_aspect_ratio;
 layout(points) in;
 layout(triangle_strip, max_vertices = 3) out;
 in vec3 v_color[];
@@ -18,6 +19,7 @@ void main()
 	{
 		gl_Position = gl_in[0].gl_Position +
 			vec4(cos(angle), sin(angle), 0.0, 0.0) * v_radius[0];
+		gl_Position.y *= u_aspect_ratio;
 		EmitVertex();
 		angle += TAU/3.0;
 	}

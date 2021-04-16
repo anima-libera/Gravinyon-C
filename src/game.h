@@ -5,6 +5,13 @@
 #include "input.h"
 #include <GL/glew.h>
 
+#define GAME_VIEWPORT_LEFT 0
+#define GAME_VIEWPORT_TOP 0
+#define GAME_VIEWPORT_WIDTH 1600
+#define GAME_VIEWPORT_HEIGHT 800
+#define GAME_ASPECT_RATIO \
+	((float)GAME_VIEWPORT_WIDTH / (float)GAME_VIEWPORT_HEIGHT)
+
 struct ship_t
 {
 	float x, y;

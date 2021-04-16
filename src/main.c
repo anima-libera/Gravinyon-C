@@ -11,31 +11,26 @@
 #include "input.h"
 #include <GL/glew.h>
 
-static GLuint s_vao_id;
-
 int init_g_all(void)
 {
 	if (init_g_graphics() != 0)
 	{
 		return -1;
 	}
-	enable_opengl_dbgmsg();
-
-	glGenVertexArrays(1, &s_vao_id);
-	glBindVertexArray(s_vao_id);
-
 	if (shprog_build_all() != 0)
 	{
 		return -1;
 	}
-
+	glProgramUniform1f(g_shprog_draw_ship, 0, GAME_ASPECT_RATIO);
+	glProgramUniform1f(g_shprog_draw_bullets, 0, GAME_ASPECT_RATIO);
+	glProgramUniform1f(g_shprog_draw_enemies, 0, GAME_ASPECT_RATIO);
+	glProgramUniform1f(g_shprog_draw_parts, 0, GAME_ASPECT_RATIO);
+	glProgramUniform1f(g_shprog_draw_stars, 0, GAME_ASPECT_RATIO);
 	if (init_g_audio() != 0)
 	{
 		return -1;
 	}
-
 	g_rg = rg_create_timeseeded(0);
-
 	return 0;
 }
 
@@ -43,7 +38,6 @@ void cleanup_g_all(void)
 {
 	rg_destroy(g_rg);
 	cleanup_g_audio();
-	glDeleteVertexArrays(1, &s_vao_id);
 	shprog_destroy_all();
 	cleanup_g_graphics();
 }

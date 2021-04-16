@@ -1,9 +1,10 @@
 
 #include "bg.h"
 #include "utils.h"
-#include <stdlib.h>
 #include "random.h"
 #include "shaders.h"
+#include "game.h"
+#include <stdlib.h>
 
 void bg_init(bg_t* bg)
 {
@@ -37,7 +38,9 @@ void bg_render(bg_t* bg)
 {
 	/* Render the space background */
 	glProgramUniform1f(g_shprog_draw_bg, 0, bg->time);
-	glViewport(400, 0, 800, 800);
+	glViewport(
+		GAME_VIEWPORT_LEFT, GAME_VIEWPORT_TOP,
+		GAME_VIEWPORT_WIDTH, GAME_VIEWPORT_HEIGHT);
 	glUseProgram(g_shprog_draw_bg);
 	glDrawArrays(GL_POINTS, 0, 1);
 	glUseProgram((GLuint)0);
@@ -49,7 +52,9 @@ void bg_render(bg_t* bg)
 		#define ATTRIB_LOCATION_SIZE ((GLuint)1)
 		#define ATTRIB_LOCATION_COLOR ((GLuint)2)
 
-		glViewport(400, 0, 800, 800);
+		glViewport(
+			GAME_VIEWPORT_LEFT, GAME_VIEWPORT_TOP,
+			GAME_VIEWPORT_WIDTH, GAME_VIEWPORT_HEIGHT);
 		glUseProgram(g_shprog_draw_stars);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_POS);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_SIZE);
@@ -85,7 +90,8 @@ void bg_perform_iter(bg_t* bg)
 	{
 		star_t* star = bg_alloc_star(bg);
 		star->x = 1.0f;
-		star->y = rg_float(g_rg, -1.0f, 1.0f);
+		star->y = rg_float(g_rg,
+			-1.0f / GAME_ASPECT_RATIO, 1.0f / GAME_ASPECT_RATIO);
 		star->r = 1.0f;
 		star->g = 1.0f;
 		star->b = 1.0f;

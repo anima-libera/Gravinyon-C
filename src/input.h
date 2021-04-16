@@ -11,10 +11,14 @@ struct commands_t
 	/* Debugging commands */
 	int debug_spawn_enemies;
 
+	/* Cursor position */
+	int inwindow_cursor_x, inwindow_cursor_y;
+
 	/* Game commands */
 	int is_firing;
-	float cursor_x, cursor_y;
 };
 typedef struct commands_t commands_t;
+
+void apply_input_commands(commands_t* commands);
 
 #endif /* GRAVINYON_HEADER_INPUT_ */
