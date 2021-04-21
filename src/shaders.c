@@ -84,7 +84,7 @@ static GLuint shprog_compute_build(const char* src_comp)
 	return shprog_id;
 }
 
-GLuint g_shprog_draw_ship = 0;
+GLuint g_shprog_draw_ships = 0;
 GLuint g_shprog_draw_enemies = 0;
 GLuint g_shprog_draw_bullets = 0;
 GLuint g_shprog_draw_parts = 0;
@@ -93,11 +93,11 @@ GLuint g_shprog_draw_stars = 0;
 
 int shprog_build_all(void)
 {
-	g_shprog_draw_ship = shprog_build(
-		g_shader_ship_vert,
-		g_shader_ship_geom,
-		g_shader_ship_frag);
-	if (g_shprog_draw_ship == 0)
+	g_shprog_draw_ships = shprog_build(
+		g_shader_ships_vert,
+		g_shader_ships_geom,
+		g_shader_ships_frag);
+	if (g_shprog_draw_ships == 0)
 	{
 		return -1;
 	}
@@ -146,8 +146,8 @@ int shprog_build_all(void)
 
 void shprog_destroy_all(void)
 {
-	glDeleteProgram(g_shprog_draw_ship);
-	g_shprog_draw_ship = 0;
+	glDeleteProgram(g_shprog_draw_ships);
+	g_shprog_draw_ships = 0;
 	glDeleteProgram(g_shprog_draw_enemies);
 	g_shprog_draw_enemies = 0;
 	glDeleteProgram(g_shprog_draw_bullets);

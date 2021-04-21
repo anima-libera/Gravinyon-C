@@ -20,9 +20,9 @@
 #define BINARY /* Escapes the file content as an array of bytes. */
 #define SIZE /* Just produces an integer literal of the size in bytes. */
 
-EMBEDDED("shaders/ship.vert", TEXT) const char g_shader_ship_vert[];
-EMBEDDED("shaders/ship.geom", TEXT) const char g_shader_ship_geom[];
-EMBEDDED("shaders/ship.frag", TEXT) const char g_shader_ship_frag[];
+EMBEDDED("shaders/ships.vert", TEXT) const char g_shader_ships_vert[];
+EMBEDDED("shaders/ships.geom", TEXT) const char g_shader_ships_geom[];
+EMBEDDED("shaders/ships.frag", TEXT) const char g_shader_ships_frag[];
 EMBEDDED("shaders/enemies.vert", TEXT) const char g_shader_enemies_vert[];
 EMBEDDED("shaders/enemies.geom", TEXT) const char g_shader_enemies_geom[];
 EMBEDDED("shaders/enemies.frag", TEXT) const char g_shader_enemies_frag[];

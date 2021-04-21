@@ -21,7 +21,7 @@ int init_g_all(void)
 	{
 		return -1;
 	}
-	glProgramUniform1f(g_shprog_draw_ship, 0, GAME_ASPECT_RATIO);
+	glProgramUniform1f(g_shprog_draw_ships, 0, GAME_ASPECT_RATIO);
 	glProgramUniform1f(g_shprog_draw_bullets, 0, GAME_ASPECT_RATIO);
 	glProgramUniform1f(g_shprog_draw_enemies, 0, GAME_ASPECT_RATIO);
 	glProgramUniform1f(g_shprog_draw_parts, 0, GAME_ASPECT_RATIO);
@@ -52,6 +52,8 @@ int main(void)
 	gs_t gs = {0};
 	gs_init(&gs);
 
+	gs_spawn_ship(&gs);
+
 	bg_t bg = {0};
 	bg_init(&bg);
 
@@ -64,6 +66,11 @@ int main(void)
 		if (commands.is_escaping || commands.is_quitting)
 		{
 			break;
+		}
+
+		if (commands.debug_spawn_ships && gs.ship_number == 0)
+		{
+			gs_spawn_ship(&gs);
 		}
 
 		if (commands.debug_spawn_enemies)

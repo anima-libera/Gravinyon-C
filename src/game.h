@@ -32,6 +32,7 @@ typedef struct enemy_t enemy_t;
 struct bullet_t
 {
 	float x, y;
+	float r, g, b;
 	float tail_x, tail_y;
 	float angle, speed;
 	GLuint safe_time;
@@ -50,10 +51,13 @@ struct part_t
 typedef struct part_t part_t;
 
 /* Game state data */
+/* TODO: make this global data ? */
 struct gs_t
 {
-	ship_t ship;
-	GLuint buf_ship_id;
+	unsigned int ship_maximum_number;
+	unsigned int ship_number;
+	ship_t* ship_array;
+	GLuint buf_ships_id;
 
 	unsigned int enemy_maximum_number;
 	unsigned int enemy_number;
@@ -76,9 +80,11 @@ int init_g_all(void);
 void cleanup_g_all(void);
 void gs_init(gs_t* gs);
 void gs_cleanup(gs_t* gs);
+ship_t* gs_alloc_ship(gs_t* gs);
 enemy_t* gs_alloc_enemy(gs_t* gs);
 bullet_t* gs_alloc_bullet(gs_t* gs);
 part_t* gs_alloc_part(gs_t* gs);
+void gs_spawn_ship(gs_t* gs);
 void gs_spawn_enemies(gs_t* gs);
 void gs_perform_iter(gs_t* gs, commands_t* commands);
 void gs_perform_iter_stars(gs_t* gs);

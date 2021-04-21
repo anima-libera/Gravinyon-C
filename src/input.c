@@ -21,6 +21,10 @@ void apply_input_commands(commands_t* commands)
 						commands->is_escaping = event.type == SDL_KEYDOWN;
 					break;
 
+					case SDLK_s:
+						commands->debug_spawn_ships = event.type == SDL_KEYDOWN;
+					break;
+
 					case SDLK_e:
 						commands->debug_spawn_enemies = event.type == SDL_KEYDOWN;
 					break;

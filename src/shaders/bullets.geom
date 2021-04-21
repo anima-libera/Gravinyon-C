@@ -3,7 +3,7 @@
 layout(location = 0) uniform float u_aspect_ratio;
 layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
-in int v_safe_time[];
+in vec3 v_color[];
 in float v_angle[];
 in vec2 v_tail_pos[];
 out vec3 g_color;
@@ -13,10 +13,7 @@ out vec3 g_color;
 
 void main()
 {
-	float safe_time_float = float(v_safe_time[0]);
-	g_color = vec3(1.0, 1.0, 1.0) -
-		vec3(0.0, 0.0, 0.0) * (safe_time_float/20.0);
-	/* TODO: The code above doesn't do what it is supposed to do, does it ? */
+	g_color = v_color[0];
 
 	float angle = v_angle[0];
 	for (int i = 0; i < 3; i++)

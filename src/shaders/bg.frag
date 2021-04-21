@@ -16,9 +16,9 @@ float interpolate(float ratio, float inf, float sup)
 	return smoothratio * inf + (1.0 - smoothratio) * sup;
 }
 
-float tile_noise(float tile_size, int time_tile_size, float channel)
+float tile_noise(float tile_size, int time_tile_size, float channel, float x_speed)
 {
-	vec2 coords = vec2(gl_FragCoord.xy) + vec2(u_time * 2.0, 0.0);
+	vec2 coords = vec2(gl_FragCoord.xy) + vec2(u_time * x_speed, 0.0);
 	float time_coord = u_time;
 	vec2 tile_coords = coords - vec2(mod(coords.x, tile_size), mod(coords.y, tile_size));
 	int time_tile_coord = int(time_coord - mod(time_coord, time_tile_size));
@@ -56,18 +56,18 @@ float tile_noise(float tile_size, int time_tile_size, float channel)
 	return noise;
 }
 
-float fractal_noise(float channel)
+float fractal_noise(float channel, float x_speed)
 {
 	float noise_sum = 0.0;
 	float importance_sum = 0.0;
 	float current_importance = 100.0;
 	float current_size = 400.0;
 	float current_time_size = 800.0;
-	for (int i = 0; i < 12; i++)
+	for (int i = 0; i < 8; i++)
 	{
-		noise_sum += tile_noise(current_size, int(current_time_size), channel) * current_importance;
+		noise_sum += tile_noise(current_size, int(current_time_size+1.0), channel, x_speed) * current_importance;
 		importance_sum += current_importance;
-		current_importance /= 2.0;
+		current_importance /= 2.1;
 		current_size /= 2.0;
 		current_time_size /= 1.7;
 	}
@@ -85,20 +85,21 @@ void main()
 {
 	vec3 color;
 	
-	float noise = fractal_noise(0.0);
+	float u = smoothstep(0.0, 1.0, distance(gl_FragCoord.y, 400.0) / 400.0);
+	float noise_a = fractal_noise(0.0, 2.0);
 
-	if (noise < 0.3)
+	if (noise_a < 0.3)
 	{
 		color = vec3(0.0, 0.0, 0.0);
 	}
-	else if (noise < 0.6)
+	else if (noise_a < 0.6)
 	{
-		color = vec3(0.0, 0.0, 1.0) * expand(noise, 0.3, 0.6);
+		color = vec3(0.0, 0.0, 1.0) * expand(noise_a, 0.3, 0.6);
 	}
-	else if (noise < 0.93)
+	else if (noise_a < 0.93)
 	{
 		color = vec3(0.0, 0.0, 1.0) +
-			vec3(1.0, 0.0, 0.0) * expand(noise, 0.6, 0.93);
+			vec3(1.0, 0.0, 0.0) * expand(noise_a, 0.6, 0.93);
 	}
 	else
 	{

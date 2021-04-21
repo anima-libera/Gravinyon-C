@@ -18,25 +18,25 @@ inline static float length(float x, float y)
 void gs_init(gs_t* gs)
 {
 	/* Ship */
-	gs->ship.x = 0.5f;
-	gs->ship.y = 0.5f;
-	gs->ship.reload_max = 5;
-	glGenBuffers(1, &gs->buf_ship_id);
-	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_ship_id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ship_t), &gs->ship, GL_DYNAMIC_DRAW);
+	gs->ship_maximum_number = 16;
+	gs->ship_number = 0;
+	gs->ship_array = xcalloc(gs->ship_maximum_number, sizeof(ship_t));
+	glGenBuffers(1, &gs->buf_ships_id);
+	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_ships_id);
+	glBufferData(GL_ARRAY_BUFFER, gs->ship_maximum_number * sizeof(ship_t),
+		&gs->ship_array, GL_DYNAMIC_DRAW);
 
 	/* Enemies */
-	gs->enemy_maximum_number = 256;
+	gs->enemy_maximum_number = 32;
 	gs->enemy_number = 0;
 	gs->enemy_array = xcalloc(gs->enemy_maximum_number, sizeof(enemy_t));
-	gs_spawn_enemies(gs);
 	glGenBuffers(1, &gs->buf_enemies_id);
 	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_enemies_id);
 	glBufferData(GL_ARRAY_BUFFER, gs->enemy_maximum_number * sizeof(enemy_t),
 		gs->enemy_array, GL_DYNAMIC_DRAW);
 
 	/* Bullets */
-	gs->bullet_maximum_number = 256;
+	gs->bullet_maximum_number = 32;
 	gs->bullet_number = 0;
 	gs->bullet_array = xcalloc(gs->bullet_maximum_number, sizeof(bullet_t));
 	glGenBuffers(1, &gs->buf_bullets_id);
@@ -56,56 +56,100 @@ void gs_init(gs_t* gs)
 
 void gs_cleanup(gs_t* gs)
 {
+	free(gs->ship_array);
 	free(gs->enemy_array);
 	free(gs->bullet_array);
 	free(gs->part_array);
-	glDeleteBuffers(1, &gs->buf_ship_id);
+	glDeleteBuffers(1, &gs->buf_ships_id);
 	glDeleteBuffers(1, &gs->buf_enemies_id);
 	glDeleteBuffers(1, &gs->buf_bullets_id);
 	glDeleteBuffers(1, &gs->buf_parts_id);
 }
 
-enemy_t* gs_alloc_enemy(gs_t* gs)
-{
-	DYNAMIC_VECTOR_RESIZE_IF_NEEDED(
-		gs->enemy_number, gs->enemy_maximum_number, gs->enemy_array, enemy_t);
-	enemy_t* new_enemy = &gs->enemy_array[gs->enemy_number++];
-	return new_enemy;
-}
+#define DEFINE_GS_ALLOC_FUNCTION(name_) \
+	name_##_t* gs_alloc_##name_(gs_t* gs) \
+	{ \
+		DYNAMIC_VECTOR_RESIZE_IF_NEEDED( \
+			gs->name_##_number, gs->name_##_maximum_number, \
+			gs->name_##_array, name_##_t); \
+		name_##_t* new_object = &gs->name_##_array[gs->name_##_number++]; \
+		*new_object = (name_##_t){0}; \
+		return new_object; \
+	} \
+	name_##_t* gs_alloc_##name_(gs_t* gs)
 
-bullet_t* gs_alloc_bullet(gs_t* gs)
-{
-	DYNAMIC_VECTOR_RESIZE_IF_NEEDED(
-		gs->bullet_number, gs->bullet_maximum_number, gs->bullet_array, bullet_t);
-	bullet_t* new_bullet = &gs->bullet_array[gs->bullet_number++];
-	return new_bullet;
-}
+DEFINE_GS_ALLOC_FUNCTION(ship);
+DEFINE_GS_ALLOC_FUNCTION(enemy);
+DEFINE_GS_ALLOC_FUNCTION(bullet);
+DEFINE_GS_ALLOC_FUNCTION(part);
 
-part_t* gs_alloc_part(gs_t* gs)
+void gs_spawn_ship(gs_t* gs)
 {
-	DYNAMIC_VECTOR_RESIZE_IF_NEEDED(
-		gs->part_number, gs->part_maximum_number, gs->part_array, part_t);
-	part_t* new_part = &gs->part_array[gs->part_number++];
-	return new_part;
+	ship_t* new_ship = gs_alloc_ship(gs);
+	new_ship->x = 0.0f;
+	new_ship->y = 0.0f;
+	new_ship->reload_max = 5;
 }
 
 void gs_spawn_enemies(gs_t* gs)
 {
-	for (unsigned int i = 0; i < 4; i++)
+	unsigned int spawn_number = rg_uint(g_rg, 2, 8);
+	for (unsigned int i = 0; i < spawn_number; i++)
 	{
 		enemy_t* new_enemy = gs_alloc_enemy(gs);
-		new_enemy->x = -0.5f;
-		new_enemy->y = -0.5f;
 		new_enemy->r = 0.0f;
 		new_enemy->g = 1.0f;
 		new_enemy->b = 1.0f;
-		new_enemy->angle = rg_float(g_rg, 0.0f, TAU);
-		new_enemy->speed = rg_float(g_rg, 0.001f, 0.015f);
+
+		new_enemy->x = 1.0f;
+
+		if (rg_uint(g_rg, 0, 3) == 0)
+		{
+			new_enemy->y = rg_float(g_rg, 
+				-1.0f/GAME_ASPECT_RATIO, 1.0f/GAME_ASPECT_RATIO);
+			new_enemy->angle = -TAU/2.0f + rg_float(g_rg, -0.06f, 0.06f);
+			new_enemy->speed = rg_float(g_rg, 0.004f, 0.009f);
+		}
+		else
+		{
+			new_enemy->y = rg_float(g_rg, 
+				-1.0f/GAME_ASPECT_RATIO, 1.0f/GAME_ASPECT_RATIO);
+			new_enemy->angle = rg_float(g_rg, TAU*5.0f/16.0f, TAU*11.0f/16.0f);
+			new_enemy->speed = rg_float(g_rg, 0.001f, 0.006f);
+		}
+	}
+}
+
+void gs_particles_boom(gs_t* gs,
+	float x, float y, float angle, float speed, unsigned int number)
+{
+	unsigned int count = rg_uint(g_rg, 50, 70);
+	for (unsigned int k = 0; k < count; k++)
+	{
+		part_t* new_part = gs_alloc_part(gs);
+		new_part->x = x;
+		new_part->y = y;
+		new_part->r = 1.0f;
+		new_part->g = 1.0f;
+		new_part->b = 1.0f;
+		new_part->radius_max = rg_float(g_rg, 0.005f, 0.018f);
+		new_part->radius = new_part->radius_max;
+		new_part->draw_angle = rg_float(g_rg, 0.0f, TAU);
+		new_part->angle = angle + rg_float(g_rg, -0.4f, 0.4f);
+		new_part->speed = speed * rg_float(g_rg, 0.1f, 1.3f);
+		new_part->rotation = rg_float(g_rg, -0.03f, 0.03f);
+		new_part->life_time_max = rg_uint(g_rg, 20, 70);
+		new_part->life_time = new_part->life_time_max;
 	}
 }
 
 void gs_perform_iter(gs_t* gs, commands_t* commands)
 {
+	if (gs->enemy_number <= 3 || rg_uint(g_rg, 0, 999) == 0)
+	{
+		gs_spawn_enemies(gs);
+	}
+
 	float ingame_cursor_x =
 		2.0f * (
 			(float)commands->inwindow_cursor_x - (float)GAME_VIEWPORT_LEFT
@@ -126,12 +170,15 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 	#define ENEMY_RADIUS 0.012
 	
 	/* Update the ship and firing */
+	for (unsigned int i = 0; i < gs->ship_number; i++)
 	{
-		float vx = cosf(gs->ship.angle) * gs->ship.speed;
-		float vy = sinf(gs->ship.angle) * gs->ship.speed;
+		ship_t* ship = &gs->ship_array[i];
+
+		float vx = cosf(ship->angle) * ship->speed;
+		float vy = sinf(ship->angle) * ship->speed;
 
 		float cursor_squaredist =
-			square_length(gs->ship.x - ingame_cursor_x, gs->ship.y - ingame_cursor_y);
+			square_length(ship->x - ingame_cursor_x, ship->y - ingame_cursor_y);
 		float cursor_dist = sqrtf(cursor_squaredist);
 
 		/* Collision with the cursor */
@@ -139,86 +186,46 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		{
 			printf("TODO: die\n");
 			play_sound(g_sound_die);
-			unsigned int count = rg_uint(g_rg, 50, 70);
-			for (unsigned int k = 0; k < count; k++)
-			{
-				part_t* new_part = gs_alloc_part(gs);
-				new_part->x = gs->ship.x;
-				new_part->y = gs->ship.y;
-				new_part->r = 1.0f;
-				new_part->g = 1.0f;
-				new_part->b = 1.0f;
-				new_part->radius_max =
-					rg_float(g_rg, 0.005f, 0.018f);
-				new_part->radius = new_part->radius_max;
-				new_part->draw_angle =
-					rg_float(g_rg, 0.0f, TAU);
-				new_part->angle =
-					gs->ship.angle + rg_float(g_rg, -0.4f, 0.4f);
-				new_part->speed =
-					gs->ship.speed * rg_float(g_rg, 0.2f, 1.3f);
-				new_part->rotation =
-					rg_float(g_rg, -0.03f, 0.03f);
-				new_part->life_time_max =
-					rg_uint(g_rg, 20, 70);
-				new_part->life_time = new_part->life_time_max;
-			}
-			gs->ship.x = 0.5f;
-			gs->ship.y = 0.5f;
-			gs->ship.speed = 0.0f;
-			goto ship_update_end;
+			gs_particles_boom(gs,
+				ship->x, ship->y, ship->angle, ship->speed,
+				rg_uint(g_rg, 50, 70));
+
+			/* The ship dies */
+			*ship = gs->ship_array[--gs->ship_number];
+			i--;
+			continue;
 		}
 		
 		/* Collision with enemies */
-		for (unsigned int i = 0; i < gs->enemy_number; i++)
+		for (unsigned int j = 0; j < gs->enemy_number; j++)
 		{
 			float dist = length(
-				gs->ship.x - gs->enemy_array[i].x, gs->ship.y - gs->enemy_array[i].y);
+				ship->x - gs->enemy_array[j].x, ship->y - gs->enemy_array[j].y);
 			if (dist < SHIP_COLLIDE_RADIUS + ENEMY_RADIUS)
 			{
 				printf("TODO: die\n");
 				play_sound(g_sound_die);
-				unsigned int count = rg_uint(g_rg, 50, 70);
-				for (unsigned int k = 0; k < count; k++)
-				{
-					part_t* new_part = gs_alloc_part(gs);
-					new_part->x = gs->ship.x;
-					new_part->y = gs->ship.y;
-					new_part->r = 1.0f;
-					new_part->g = 1.0f;
-					new_part->b = 1.0f;
-					new_part->radius_max =
-						rg_float(g_rg, 0.005f, 0.018f);
-					new_part->radius = new_part->radius_max;
-					new_part->draw_angle =
-						rg_float(g_rg, 0.0f, TAU);
-					new_part->angle =
-						gs->ship.angle + rg_float(g_rg, -0.4f, 0.4f);
-					new_part->speed =
-						gs->ship.speed * rg_float(g_rg, 0.2f, 1.3f);
-					new_part->rotation =
-						rg_float(g_rg, -0.03f, 0.03f);
-					new_part->life_time_max =
-						rg_uint(g_rg, 20, 70);
-					new_part->life_time = new_part->life_time_max;
-				}
-				gs->ship.x = 0.5f;
-				gs->ship.y = 0.5f;
-				gs->ship.speed = 0.0f;
-				goto ship_update_end;
+				gs_particles_boom(gs,
+					ship->x, ship->y, ship->angle, ship->speed,
+					rg_uint(g_rg, 50, 70));
+
+				/* The ship dies */
+				*ship = gs->ship_array[--gs->ship_number];
+				i--;
+				continue;
 			}
 		}
 
-		float cursor_angle = atan2f(ingame_cursor_y - gs->ship.y, ingame_cursor_x - gs->ship.x);
+		float cursor_angle = atan2f(ingame_cursor_y - ship->y, ingame_cursor_x - ship->x);
 
 		/* Firing mechanics */
-		if (gs->ship.reload > 0)
+		if (ship->reload > 0)
 		{
-			gs->ship.reload--;
+			ship->reload--;
 		}
 		else if (commands->is_firing)
 		{
-			gs->ship.reload = gs->ship.reload_max;
+			ship->reload = ship->reload_max;
 
 			play_sound(g_sound_pew);
 
@@ -231,11 +238,14 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 
 			bullet_t* new_bullet = gs_alloc_bullet(gs);
 			new_bullet->x =
-				gs->ship.x + cosf(cursor_angle) * SHIP_COLLIDE_RADIUS;
+				ship->x + cosf(cursor_angle) * SHIP_COLLIDE_RADIUS;
 			new_bullet->y =
-				gs->ship.y + sinf(cursor_angle) * SHIP_COLLIDE_RADIUS;
-			new_bullet->tail_x = gs->ship.x;
-			new_bullet->tail_y = gs->ship.y;
+				ship->y + sinf(cursor_angle) * SHIP_COLLIDE_RADIUS;
+			new_bullet->r = 1.0f;
+			new_bullet->g = 1.0f;
+			new_bullet->b = 1.0f;
+			new_bullet->tail_x = ship->x;
+			new_bullet->tail_y = ship->y;
 			new_bullet->angle = cursor_angle;
 			new_bullet->speed = 0.009f / cursor_dist;
 			new_bullet->safe_time = 20;
@@ -246,45 +256,47 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		}
 		
 		#define GRAVITY_FACTOR 0.0008f
-		vx += GRAVITY_FACTOR * (ingame_cursor_x - gs->ship.x) / cursor_dist;
-		vy += GRAVITY_FACTOR * (ingame_cursor_y - gs->ship.y) / cursor_dist;
+		vx += GRAVITY_FACTOR * (ingame_cursor_x - ship->x) / cursor_dist;
+		vy += GRAVITY_FACTOR * (ingame_cursor_y - ship->y) / cursor_dist;
 		#undef GRAVITY_FACTOR
 
-		gs->ship.x += vx;
-		gs->ship.y += vy;
+		ship->x += vx;
+		ship->y += vy;
 
-		/* Bounce on the edges of the world */
+		/* Bounce or die on the edges of the world */
 		#define BOUNCE_FACTOR 0.8f
-		if (gs->ship.x < INGAME_LEFT)
+		if (ship->x < INGAME_LEFT || ship->x > INGAME_RIGHT)
 		{
-			gs->ship.x = INGAME_LEFT;
-			vx *= -BOUNCE_FACTOR;
+			printf("TODO: die\n");
+			play_sound(g_sound_die);
+			gs_particles_boom(gs,
+				ship->x, ship->y, ship->angle, -ship->speed,
+				rg_uint(g_rg, 50, 70));
+
+			/* The ship dies */
+			*ship = gs->ship_array[--gs->ship_number];
+			i--;
+			continue;
 		}
-		else if (gs->ship.x > INGAME_RIGHT)
+		if (ship->y < INGAME_BOTTOM)
 		{
-			gs->ship.x = INGAME_RIGHT;
-			vx *= -BOUNCE_FACTOR;
-		}
-		if (gs->ship.y < INGAME_BOTTOM)
-		{
-			gs->ship.y = INGAME_BOTTOM;
+			ship->y = INGAME_BOTTOM;
 			vy *= -BOUNCE_FACTOR;
 		}
-		else if (gs->ship.y > INGAME_TOP)
+		else if (ship->y > INGAME_TOP)
 		{
-			gs->ship.y = INGAME_TOP;
+			ship->y = INGAME_TOP;
 			vy *= -BOUNCE_FACTOR;
 		}
 		#undef BOUNCE_FACTOR
 
-		gs->ship.angle = atan2f(vy, vx);
-		gs->ship.speed = length(vx, vy);
-		gs->ship.draw_angle = cursor_angle;
-
-		ship_update_end:;
+		ship->angle = atan2f(vy, vx);
+		ship->speed = length(vx, vy);
+		ship->draw_angle = cursor_angle;
 	}
-	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_ship_id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ship_t), &gs->ship, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_ships_id);
+	glBufferData(GL_ARRAY_BUFFER, gs->ship_number * sizeof(ship_t),
+		gs->ship_array, GL_DYNAMIC_DRAW);
 
 	/* Update the bullets */
 	for (unsigned int i = 0; i < gs->bullet_number; i++)
@@ -306,6 +318,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		{
 			/* The bullet dies */
 			*bullet = gs->bullet_array[--gs->bullet_number];
+			i--;
 			continue;
 		}
 
@@ -337,46 +350,20 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 					play_sound(g_sound_boom);
 
 					/* Spaw particles */
-					unsigned int count = rg_uint(g_rg, 10, 30);
-					for (unsigned int k = 0; k < count; k++)
-					{
-						part_t* new_part = gs_alloc_part(gs);
-						new_part->x = enemy->x;
-						new_part->y = enemy->y;
-						new_part->r = 1.0f;
-						new_part->g = 1.0f;
-						new_part->b = 1.0f;
-						new_part->radius_max =
-							rg_float(g_rg, 0.005f, 0.018f);
-						new_part->radius = new_part->radius_max;
-						new_part->draw_angle =
-							rg_float(g_rg, 0.0f, TAU);
-						new_part->angle =
-							bullet->angle + rg_float(g_rg, -0.4f, 0.4f);
-						new_part->speed =
-							bullet->speed * rg_float(g_rg, 0.2f, 1.3f);
-						new_part->rotation =
-							rg_float(g_rg, -0.03f, 0.03f);
-						new_part->life_time_max =
-							rg_uint(g_rg, 20, 70);
-						new_part->life_time = new_part->life_time_max;
-					}
+					gs_particles_boom(gs,
+						enemy->x, enemy->y, bullet->angle, bullet->speed,
+						rg_uint(g_rg, 10, 30));
 
 					/* The enemy dies */
 					*enemy = gs->enemy_array[--gs->enemy_number];
 
 					/* The bullet dies */
 					*bullet = gs->bullet_array[--gs->bullet_number];
+					i--;
 					goto continue_bullets;
 				}
 			}
 			#undef STEP
-		}
-		if (0)
-		{
-			/* Warning: Super high quality code, do not stare for too
-			 * long without eye protection. */
-			continue_bullets: continue;
 		}
 
 		/* Collision with the ship */
@@ -386,44 +373,36 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		}
 		else
 		{
-			float ship_dist =
-				length(bullet->x - gs->ship.x, bullet->y - gs->ship.y);
-			if (ship_dist < SHIP_COLLIDE_RADIUS)
+			for (unsigned int j = 0; j < gs->ship_number; j++)
 			{
-				printf("TODO: die\n");
-				play_sound(g_sound_die);
-				unsigned int count = rg_uint(g_rg, 50, 70);
-				for (unsigned int k = 0; k < count; k++)
-				{
-					part_t* new_part = gs_alloc_part(gs);
-					new_part->x = gs->ship.x;
-					new_part->y = gs->ship.y;
-					new_part->r = 1.0f;
-					new_part->g = 1.0f;
-					new_part->b = 1.0f;
-					new_part->radius_max =
-						rg_float(g_rg, 0.005f, 0.018f);
-					new_part->radius = new_part->radius_max;
-					new_part->draw_angle =
-						rg_float(g_rg, 0.0f, TAU);
-					new_part->angle =
-						gs->ship.angle + rg_float(g_rg, -0.4f, 0.4f);
-					new_part->speed =
-						gs->ship.speed * rg_float(g_rg, 0.2f, 1.3f);
-					new_part->rotation =
-						rg_float(g_rg, -0.03f, 0.03f);
-					new_part->life_time_max =
-						rg_uint(g_rg, 20, 70);
-					new_part->life_time = new_part->life_time_max;
-				}
-				gs->ship.x = 0.5f;
-				gs->ship.y = 0.5f;
-				gs->ship.speed = 0.0f;
+				ship_t* ship = &gs->ship_array[j];
 
-				/* The bullet dies */
-				*bullet = gs->bullet_array[--gs->bullet_number];
-				continue;
+				float ship_dist =
+					length(bullet->x - ship->x, bullet->y - ship->y);
+				if (ship_dist < SHIP_COLLIDE_RADIUS)
+				{
+					printf("TODO: die\n");
+					play_sound(g_sound_die);
+					gs_particles_boom(gs,
+						ship->x, ship->y, ship->angle, ship->speed,
+						rg_uint(g_rg, 50, 70));
+
+					/* The ship dies */
+					*ship = gs->ship_array[--gs->ship_number];
+
+					/* The bullet dies */
+					*bullet = gs->bullet_array[--gs->bullet_number];
+					i--;
+					goto continue_bullets;
+				}
 			}
+		}
+
+		if (0)
+		{
+			/* Warning: Super high quality code, do not stare for too
+			 * long without eye protection. */
+			continue_bullets: continue;
 		}
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_bullets_id);
@@ -443,13 +422,11 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 
 		if (enemy->x < INGAME_LEFT)
 		{
-			enemy->x = INGAME_LEFT;
-			vx *= -1.0f;
+			enemy->x = INGAME_RIGHT;
 		}
 		else if (enemy->x > INGAME_RIGHT)
 		{
-			enemy->x = INGAME_RIGHT;
-			vx *= -1.0f;
+			enemy->x = INGAME_LEFT;
 		}
 		if (enemy->y < INGAME_BOTTOM)
 		{
@@ -511,14 +488,9 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		gs->part_array, GL_DYNAMIC_DRAW);
 }
 
-void gs_render(gs_t* gs)
+void gs_render_ships(gs_t* gs)
 {
-	#if 0
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	#endif
-
-	/* Render the ship */
+	if (gs->ship_number > 0)
 	{
 		#define ATTRIB_LOCATION_POS ((GLuint)0)
 		#define ATTRIB_LOCATION_DRAW_ANGLE ((GLuint)1)
@@ -526,17 +498,17 @@ void gs_render(gs_t* gs)
 		glViewport(
 			GAME_VIEWPORT_LEFT, GAME_VIEWPORT_TOP,
 			GAME_VIEWPORT_WIDTH, GAME_VIEWPORT_HEIGHT);
-		glUseProgram(g_shprog_draw_ship);
+		glUseProgram(g_shprog_draw_ships);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_POS);
 		glEnableVertexAttribArray(ATTRIB_LOCATION_DRAW_ANGLE);
 		
-		glBindBuffer(GL_ARRAY_BUFFER, gs->buf_ship_id);
+		glBindBuffer(GL_ARRAY_BUFFER, gs->buf_ships_id);
 		glVertexAttribPointer(ATTRIB_LOCATION_POS, 2, GL_FLOAT,
 			GL_FALSE, sizeof(ship_t), (void*)offsetof(ship_t, x));
 		glVertexAttribPointer(ATTRIB_LOCATION_DRAW_ANGLE, 1, GL_FLOAT,
 			GL_FALSE, sizeof(ship_t), (void*)offsetof(ship_t, draw_angle));
 
-		glDrawArrays(GL_POINTS, 0, 1);
+		glDrawArrays(GL_POINTS, 0, gs->ship_number);
 		
 		glDisableVertexAttribArray(ATTRIB_LOCATION_POS);
 		glDisableVertexAttribArray(ATTRIB_LOCATION_DRAW_ANGLE);
@@ -545,8 +517,10 @@ void gs_render(gs_t* gs)
 		#undef ATTRIB_LOCATION_POS
 		#undef ATTRIB_LOCATION_DRAW_ANGLE
 	}
+}
 
-	/* Render the enemies */
+void gs_render_enemies(gs_t* gs)
+{
 	if (gs->enemy_number > 0)
 	{
 		#define ATTRIB_LOCATION_POS ((GLuint)0)
@@ -580,8 +554,10 @@ void gs_render(gs_t* gs)
 		#undef ATTRIB_LOCATION_COLOR
 		#undef ATTRIB_LOCATION_ANGLE
 	}
+}
 
-	/* Render the bullets */
+void gs_render_bullets(gs_t* gs)
+{
 	if (gs->bullet_number > 0)
 	{
 		#define ATTRIB_LOCATION_POS ((GLuint)0)
@@ -601,8 +577,8 @@ void gs_render(gs_t* gs)
 		glBindBuffer(GL_ARRAY_BUFFER, gs->buf_bullets_id);
 		glVertexAttribPointer(ATTRIB_LOCATION_POS, 2, GL_FLOAT,
 			GL_FALSE, sizeof(bullet_t), (void*)offsetof(bullet_t, x));
-		glVertexAttribPointer(ATTRIB_LOCATION_SAFE_TIME, 1, GL_UNSIGNED_INT,
-			GL_FALSE, sizeof(bullet_t), (void*)offsetof(bullet_t, safe_time));
+		glVertexAttribPointer(ATTRIB_LOCATION_SAFE_TIME, 3, GL_FLOAT,
+			GL_FALSE, sizeof(bullet_t), (void*)offsetof(bullet_t, r));
 		glVertexAttribPointer(ATTRIB_LOCATION_ANGLE, 1, GL_FLOAT,
 			GL_FALSE, sizeof(bullet_t), (void*)offsetof(bullet_t, angle));
 		glVertexAttribPointer(ATTRIB_LOCATION_TAIL_POS, 2, GL_FLOAT,
@@ -621,8 +597,10 @@ void gs_render(gs_t* gs)
 		#undef ATTRIB_LOCATION_ANGLE
 		#undef ATTRIB_LOCATION_TAIL_POS
 	}
+}
 
-	/* Render the particles */
+void gs_render_particles(gs_t* gs)
+{
 	if (gs->part_number > 0)
 	{
 		#define ATTRIB_LOCATION_POS ((GLuint)0)
@@ -662,4 +640,12 @@ void gs_render(gs_t* gs)
 		#undef ATTRIB_LOCATION_ANGLE
 		#undef ATTRIB_LOCATION_RADIUS
 	}
+}
+
+void gs_render(gs_t* gs)
+{
+	gs_render_ships(gs);
+	gs_render_enemies(gs);
+	gs_render_bullets(gs);
+	gs_render_particles(gs);
 }

@@ -11,7 +11,7 @@
 /* These are OpenGL shader program ids that can be given to glUseProgram.
  * They are obtained by a call to shprog_build_all
  * and lost by a call to shprog_destroy_all. */
-extern GLuint g_shprog_draw_ship;
+extern GLuint g_shprog_draw_ships;
 extern GLuint g_shprog_draw_enemies;
 extern GLuint g_shprog_draw_bullets;
 extern GLuint g_shprog_draw_parts;

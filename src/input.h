@@ -9,6 +9,7 @@ struct commands_t
 	int is_quitting; /* TODO: replace all these ints by some bitfields */
 
 	/* Debugging commands */
+	int debug_spawn_ships;
 	int debug_spawn_enemies;
 
 	/* Cursor position */
