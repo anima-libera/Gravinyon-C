@@ -17,6 +17,7 @@ extern GLuint g_shprog_draw_bullets;
 extern GLuint g_shprog_draw_parts;
 extern GLuint g_shprog_draw_bg;
 extern GLuint g_shprog_draw_stars;
+extern GLuint g_shprog_draw_gchars;
 
 int shprog_build_all(void);
 void shprog_destroy_all(void);

@@ -46,10 +46,10 @@ char* read_file(const char* filepath);
 	}while(0)
 
 #ifdef DEBUG
-	#define DEBUG_PRINTF_1(format_, arg1_) \
+	#define DEBUG_PRINTF_1ARG(format_, arg1_) \
 		fprintf(stderr, format_, arg1_)
 #else
-	#define DEBUG_PRINTF_1(format_, arg1_) \
+	#define DEBUG_PRINTF_1ARG(format_, arg1_) \
 		do { } while (0)
 #endif
 
@@ -67,7 +67,8 @@ char* read_file(const char* filepath);
 			} \
 			else \
 			{ \
-				DEBUG_PRINTF_1("Resize " #ptr_ " to %d\n", new_maximum_wanted); \
+				DEBUG_PRINTF_1ARG("Resize " #ptr_ " to %d\n", \
+					new_maximum_wanted); \
 			} \
 			ptr_ = new_array; \
 			elem_count_max_ = new_maximum_wanted; \

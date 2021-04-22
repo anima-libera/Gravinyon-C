@@ -90,7 +90,7 @@ def escape_file_content(filepath, escape_mode):
 generated_c = []
 generated_c.append("")
 generated_c.append("/* This file is overwritten at each compilation.")
-generated_c.append(f" * Do not modify, see \"{embedded_header_file_name}\"" +
+generated_c.append(f" * Do not modify, see \"{embedded_header_file_name}\" " +
 	"or \"_comp.py\" instead. */")
 generated_c.append("")
 embedded_header_path = os.path.join(src_dir_name, embedded_header_file_name)

@@ -123,8 +123,7 @@ void gs_spawn_enemies(gs_t* gs)
 void gs_particles_boom(gs_t* gs,
 	float x, float y, float angle, float speed, unsigned int number)
 {
-	unsigned int count = rg_uint(g_rg, 50, 70);
-	for (unsigned int k = 0; k < count; k++)
+	for (unsigned int k = 0; k < number; k++)
 	{
 		part_t* new_part = gs_alloc_part(gs);
 		new_part->x = x;
@@ -212,7 +211,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 				/* The ship dies */
 				*ship = gs->ship_array[--gs->ship_number];
 				i--;
-				continue;
+				goto continue_ships;
 			}
 		}
 
@@ -293,6 +292,13 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		ship->angle = atan2f(vy, vx);
 		ship->speed = length(vx, vy);
 		ship->draw_angle = cursor_angle;
+
+		if (0)
+		{
+			/* Warning: Super high quality code, do not stare for too
+			 * long without eye protection. */
+			continue_ships: continue;
+		}
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, gs->buf_ships_id);
 	glBufferData(GL_ARRAY_BUFFER, gs->ship_number * sizeof(ship_t),
@@ -352,7 +358,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 					/* Spaw particles */
 					gs_particles_boom(gs,
 						enemy->x, enemy->y, bullet->angle, bullet->speed,
-						rg_uint(g_rg, 10, 30));
+						rg_uint(g_rg, 30, 50));
 
 					/* The enemy dies */
 					*enemy = gs->enemy_array[--gs->enemy_number];

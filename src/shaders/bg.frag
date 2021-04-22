@@ -85,7 +85,6 @@ void main()
 {
 	vec3 color;
 	
-	float u = smoothstep(0.0, 1.0, distance(gl_FragCoord.y, 400.0) / 400.0);
 	float noise_a = fractal_noise(0.0, 2.0);
 
 	if (noise_a < 0.3)

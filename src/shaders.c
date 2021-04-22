@@ -90,9 +90,37 @@ GLuint g_shprog_draw_bullets = 0;
 GLuint g_shprog_draw_parts = 0;
 GLuint g_shprog_draw_bg = 0;
 GLuint g_shprog_draw_stars = 0;
+GLuint g_shprog_draw_gchars = 0;
 
 int shprog_build_all(void)
 {
+	#define BUILD_SHPROG(shprog_, vert_, geom_, frag_) \
+		do { \
+			shprog_ = shprog_build(vert_, geom_, frag_); \
+			if (shprog_ == 0) \
+			{ \
+				return -1; \
+			} \
+		} while (0)
+
+	BUILD_SHPROG(g_shprog_draw_ships,
+		g_shader_ships_vert, g_shader_ships_geom, g_shader_ships_frag);
+	BUILD_SHPROG(g_shprog_draw_enemies,
+		g_shader_enemies_vert, g_shader_enemies_geom, g_shader_enemies_frag);
+	BUILD_SHPROG(g_shprog_draw_bullets,
+		g_shader_bullets_vert, g_shader_bullets_geom, g_shader_bullets_frag);
+	BUILD_SHPROG(g_shprog_draw_parts,
+		g_shader_parts_vert, g_shader_parts_geom, g_shader_parts_frag);
+	BUILD_SHPROG(g_shprog_draw_bg,
+		g_shader_bg_vert, g_shader_bg_geom, g_shader_bg_frag);
+	BUILD_SHPROG(g_shprog_draw_stars,
+		g_shader_stars_vert, NULL, g_shader_stars_frag);
+	BUILD_SHPROG(g_shprog_draw_gchars,
+		g_shader_gchars_vert, g_shader_gchars_geom, g_shader_gchars_frag);
+
+	#undef BUILD_SHPROG
+	
+	#if 0
 	g_shprog_draw_ships = shprog_build(
 		g_shader_ships_vert,
 		g_shader_ships_geom,
@@ -141,6 +169,8 @@ int shprog_build_all(void)
 	{
 		return -1;
 	}
+	#endif
+
 	return 0;
 }
 
