@@ -32,6 +32,9 @@ Programmed by Anima Libera, see github.com/anima-libera uwu.
   - Add a small floating diamond that looks at the cursor and shoots
   - Add trails behind the ship
   - Add a shooting animation
+- 3D
+  - Make some objects look like 3D by adding shadows according to the angle
+  - Maybe
 - Cursor
   - Make the cursor look neat (little diamonds)
   - Make it rotate

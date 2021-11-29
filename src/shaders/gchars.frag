@@ -6,5 +6,12 @@ out vec4 out_color;
 
 void main()
 {
-	out_color = vec4(texture(u_font_texture, g_font_pos));
+	vec4 font_color = vec4(texture(u_font_texture, g_font_pos));
+	
+	if (font_color.r != 1.0)
+	{
+		discard;
+	}
+
+	out_color = vec4(font_color.r, font_color.r, font_color.r, 1.0);
 }

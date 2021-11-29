@@ -9,6 +9,7 @@
 #include "bg.h"
 #include "game.h"
 #include "input.h"
+#include "text.h"
 #include <GL/glew.h>
 
 int init_g_all(void)
@@ -43,13 +44,6 @@ void cleanup_g_all(void)
 	cleanup_g_graphics();
 }
 
-struct gchar_t
-{
-	float x, y, w, h;
-	float font_x, font_y, font_w, font_h;
-};
-typedef struct gchar_t gchar_t;
-
 int main(void)
 {
 	if (init_g_all() != 0)
@@ -57,20 +51,32 @@ int main(void)
 		return -1;
 	}
 
-	/* TODO:
-	 * get an A to be drawn via the font texture */
-
-	unsigned char* font_data = xmalloc(256 * 256);
-	for (unsigned int i = 0; i < 256 * 256; i++)
-	{
-		font_data[i] = i % 5 == 0 ? 255 : rg_uint(g_rg, 0, 127);
-	}
+	#define FONT_TEXTURE_SIDE 256
+	unsigned char* font_data = xcalloc(FONT_TEXTURE_SIDE * FONT_TEXTURE_SIDE, 1);
+	font_data[2 + 16 * FONT_TEXTURE_SIDE] = 255;
+	font_data[1 + 15 * FONT_TEXTURE_SIDE] = 255;
+	font_data[3 + 15 * FONT_TEXTURE_SIDE] = 255;
+	font_data[0 + 14 * FONT_TEXTURE_SIDE] = 255;
+	font_data[4 + 14 * FONT_TEXTURE_SIDE] = 255;
+	font_data[0 + 13 * FONT_TEXTURE_SIDE] = 255;
+	font_data[4 + 13 * FONT_TEXTURE_SIDE] = 255;
+	font_data[0 + 12 * FONT_TEXTURE_SIDE] = 255;
+	font_data[1 + 12 * FONT_TEXTURE_SIDE] = 255;
+	font_data[2 + 12 * FONT_TEXTURE_SIDE] = 255;
+	font_data[3 + 12 * FONT_TEXTURE_SIDE] = 255;
+	font_data[4 + 12 * FONT_TEXTURE_SIDE] = 255;
+	font_data[0 + 11 * FONT_TEXTURE_SIDE] = 255;
+	font_data[4 + 11 * FONT_TEXTURE_SIDE] = 255;
+	font_data[0 + 10 * FONT_TEXTURE_SIDE] = 255;
+	font_data[4 + 10 * FONT_TEXTURE_SIDE] = 255;
+	font_data[0 +  9 * FONT_TEXTURE_SIDE] = 255;
+	font_data[4 +  9 * FONT_TEXTURE_SIDE] = 255;
 
 	GLuint font_texture_id;
 	glGenTextures(1, &font_texture_id);
 	glBindTexture(GL_TEXTURE_2D, font_texture_id);
 	glTexImage2D(GL_TEXTURE_2D,
-		0, GL_RED, 256, 256, 0, GL_RED, GL_UNSIGNED_BYTE, font_data);
+		0, GL_RED, FONT_TEXTURE_SIDE, FONT_TEXTURE_SIDE, 0, GL_RED, GL_UNSIGNED_BYTE, font_data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
@@ -115,7 +121,7 @@ int main(void)
 			break;
 		}
 
-		if (commands.debug_spawn_ships)// && gs.ship_number == 0)
+		if (commands.debug_spawn_ships && gs.ship_number == 0)
 		{
 			gs_spawn_ship(&gs);
 		}

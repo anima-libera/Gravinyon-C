@@ -37,19 +37,11 @@ void apply_input_commands(commands_t* commands)
 			break;
 
 			case SDL_MOUSEBUTTONDOWN:
-				switch (event.button.button)
-				{
-					case SDL_BUTTON_LEFT:
-						commands->is_firing = 1;
-					break;
-				}
-			break;
-
 			case SDL_MOUSEBUTTONUP:
 				switch (event.button.button)
 				{
 					case SDL_BUTTON_LEFT:
-						commands->is_firing = 0;
+						commands->is_firing = event.type == SDL_MOUSEBUTTONDOWN;
 					break;
 				}
 			break;
