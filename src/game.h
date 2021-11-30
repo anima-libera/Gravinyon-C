@@ -3,6 +3,7 @@
 #define GRAVINYON_HEADER_GAME_
 
 #include "input.h"
+#include "random.h"
 #include <GL/glew.h>
 
 #define GAME_VIEWPORT_LEFT 0
@@ -51,9 +52,10 @@ struct part_t
 typedef struct part_t part_t;
 
 /* Game state data */
-/* TODO: make this global data ? */
 struct gs_t
 {
+	rg_t rg;
+
 	unsigned int ship_maximum_number;
 	unsigned int ship_number;
 	ship_t* ship_array;

@@ -17,6 +17,8 @@ inline static float length(float x, float y)
 
 void gs_init(gs_t* gs)
 {
+	rg_time_seed(&gs->rg);
+
 	/* Ship */
 	gs->ship_maximum_number = 16;
 	gs->ship_number = 0;
@@ -93,7 +95,7 @@ void gs_spawn_ship(gs_t* gs)
 
 void gs_spawn_enemies(gs_t* gs)
 {
-	unsigned int spawn_number = rg_uint(g_rg, 2, 8);
+	unsigned int spawn_number = rg_int(&gs->rg, 2, 8);
 	for (unsigned int i = 0; i < spawn_number; i++)
 	{
 		enemy_t* new_enemy = gs_alloc_enemy(gs);
@@ -103,19 +105,19 @@ void gs_spawn_enemies(gs_t* gs)
 
 		new_enemy->x = 1.0f;
 
-		if (rg_uint(g_rg, 0, 3) == 0)
+		if (rg_int(&gs->rg, 0, 3) == 0)
 		{
-			new_enemy->y = rg_float(g_rg, 
+			new_enemy->y = rg_float(&gs->rg, 
 				-1.0f/GAME_ASPECT_RATIO, 1.0f/GAME_ASPECT_RATIO);
-			new_enemy->angle = -TAU/2.0f + rg_float(g_rg, -0.06f, 0.06f);
-			new_enemy->speed = rg_float(g_rg, 0.004f, 0.009f);
+			new_enemy->angle = -TAU/2.0f + rg_float(&gs->rg, -0.06f, 0.06f);
+			new_enemy->speed = rg_float(&gs->rg, 0.004f, 0.009f);
 		}
 		else
 		{
-			new_enemy->y = rg_float(g_rg, 
+			new_enemy->y = rg_float(&gs->rg, 
 				-1.0f/GAME_ASPECT_RATIO, 1.0f/GAME_ASPECT_RATIO);
-			new_enemy->angle = rg_float(g_rg, TAU*5.0f/16.0f, TAU*11.0f/16.0f);
-			new_enemy->speed = rg_float(g_rg, 0.001f, 0.006f);
+			new_enemy->angle = rg_float(&gs->rg, TAU*5.0f/16.0f, TAU*11.0f/16.0f);
+			new_enemy->speed = rg_float(&gs->rg, 0.001f, 0.006f);
 		}
 	}
 }
@@ -131,20 +133,20 @@ void gs_particles_boom(gs_t* gs,
 		new_part->r = 1.0f;
 		new_part->g = 1.0f;
 		new_part->b = 1.0f;
-		new_part->radius_max = rg_float(g_rg, 0.005f, 0.018f);
+		new_part->radius_max = rg_float(&gs->rg, 0.005f, 0.018f);
 		new_part->radius = new_part->radius_max;
-		new_part->draw_angle = rg_float(g_rg, 0.0f, TAU);
-		new_part->angle = angle + rg_float(g_rg, -0.4f, 0.4f);
-		new_part->speed = speed * rg_float(g_rg, 0.1f, 1.3f);
-		new_part->rotation = rg_float(g_rg, -0.03f, 0.03f);
-		new_part->life_time_max = rg_uint(g_rg, 20, 70);
+		new_part->draw_angle = rg_float(&gs->rg, 0.0f, TAU);
+		new_part->angle = angle + rg_float(&gs->rg, -0.4f, 0.4f);
+		new_part->speed = speed * rg_float(&gs->rg, 0.1f, 1.3f);
+		new_part->rotation = rg_float(&gs->rg, -0.03f, 0.03f);
+		new_part->life_time_max = rg_int(&gs->rg, 20, 70);
 		new_part->life_time = new_part->life_time_max;
 	}
 }
 
 void gs_perform_iter(gs_t* gs, commands_t* commands)
 {
-	if (gs->enemy_number <= 3 || rg_uint(g_rg, 0, 999) == 0)
+	if (gs->enemy_number <= 3 || rg_int(&gs->rg, 0, 999) == 0)
 	{
 		gs_spawn_enemies(gs);
 	}
@@ -187,7 +189,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 			play_sound(g_sound_die);
 			gs_particles_boom(gs,
 				ship->x, ship->y, ship->angle, ship->speed,
-				rg_uint(g_rg, 50, 70));
+				rg_int(&gs->rg, 50, 70));
 
 			/* The ship dies */
 			*ship = gs->ship_array[--gs->ship_number];
@@ -206,7 +208,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 				play_sound(g_sound_die);
 				gs_particles_boom(gs,
 					ship->x, ship->y, ship->angle, ship->speed,
-					rg_uint(g_rg, 50, 70));
+					rg_int(&gs->rg, 50, 70));
 
 				/* The ship dies */
 				*ship = gs->ship_array[--gs->ship_number];
@@ -259,8 +261,10 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		vy += GRAVITY_FACTOR * (ingame_cursor_y - ship->y) / cursor_dist;
 		#undef GRAVITY_FACTOR
 
-		ship->x += vx;
-		ship->y += vy;
+		#define SHIP_SPEED_FACTOR 0.65f
+		ship->x += vx * SHIP_SPEED_FACTOR;
+		ship->y += vy * SHIP_SPEED_FACTOR;
+		#undef SHIP_SPEED_FACTOR
 
 		/* Bounce or die on the edges of the world */
 		#define BOUNCE_FACTOR 0.8f
@@ -270,7 +274,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 			play_sound(g_sound_die);
 			gs_particles_boom(gs,
 				ship->x, ship->y, ship->angle, -ship->speed,
-				rg_uint(g_rg, 50, 70));
+				rg_int(&gs->rg, 50, 70));
 
 			/* The ship dies */
 			*ship = gs->ship_array[--gs->ship_number];
@@ -358,7 +362,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 					/* Spaw particles */
 					gs_particles_boom(gs,
 						enemy->x, enemy->y, bullet->angle, bullet->speed,
-						rg_uint(g_rg, 30, 50));
+						rg_int(&gs->rg, 30, 50));
 
 					/* The enemy dies */
 					*enemy = gs->enemy_array[--gs->enemy_number];
@@ -391,7 +395,7 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 					play_sound(g_sound_die);
 					gs_particles_boom(gs,
 						ship->x, ship->y, ship->angle, ship->speed,
-						rg_uint(g_rg, 50, 70));
+						rg_int(&gs->rg, 50, 70));
 
 					/* The ship dies */
 					*ship = gs->ship_array[--gs->ship_number];

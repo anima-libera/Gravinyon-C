@@ -1,5 +1,6 @@
 
 #include "text.h"
+#include "utils.h"
 
 void font_init_alpha(font_t* font)
 {

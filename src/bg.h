@@ -2,6 +2,7 @@
 #ifndef GRAVINYON_HEADER_BG_
 #define GRAVINYON_HEADER_BG_
 
+#include "random.h"
 #include <GL/glew.h>
 
 struct star_t
@@ -16,6 +17,7 @@ typedef struct star_t star_t;
 struct bg_t
 {
 	float time;
+	rg_t rg;
 
 	unsigned int star_maximum_number;
 	unsigned int star_number;

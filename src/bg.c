@@ -9,6 +9,7 @@
 void bg_init(bg_t* bg)
 {
 	bg->time = 0.0f;
+	rg_time_seed(&bg->rg);
 
 	/* Stars */
 	bg->star_maximum_number = 256;
@@ -86,18 +87,18 @@ void bg_perform_iter(bg_t* bg)
 	bg->time += 1.0f;
 
 	/* Spaw stars */
-	while (rg_uint(g_rg, 0, 20) == 0)
+	while (rg_int(&bg->rg, 0, 20) == 0)
 	{
 		star_t* star = bg_alloc_star(bg);
 		star->x = 1.0f;
-		star->y = rg_float(g_rg,
+		star->y = rg_float(&bg->rg,
 			-1.0f / GAME_ASPECT_RATIO, 1.0f / GAME_ASPECT_RATIO);
 		star->r = 1.0f;
 		star->g = 1.0f;
 		star->b = 1.0f;
-		star->size = //rg_uint(g_rg, 0, 4) == 0 ? 2.0f : 1.0f;
-			rg_float(g_rg, 1.0f, 3.0f);
-		star->speed = rg_float(g_rg, 0.001f, 0.008f);
+		star->size = //rg_int(&bg->rg, 0, 4) == 0 ? 2.0f : 1.0f;
+			rg_float(&bg->rg, 1.0f, 3.0f);
+		star->speed = rg_float(&bg->rg, 0.001f, 0.008f);
 	}
 
 	/* Update the stars */

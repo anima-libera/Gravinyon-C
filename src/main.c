@@ -32,13 +32,11 @@ int init_g_all(void)
 	{
 		return -1;
 	}
-	g_rg = rg_create_timeseeded(0);
 	return 0;
 }
 
 void cleanup_g_all(void)
 {
-	rg_destroy(g_rg);
 	cleanup_g_audio();
 	shprog_destroy_all();
 	cleanup_g_graphics();
@@ -80,6 +78,7 @@ int main(void)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+	#if 0
 	unsigned int gchar_maximum_number;
 	unsigned int gchar_number;
 	gchar_t* gchar_array;
@@ -101,6 +100,7 @@ int main(void)
 	glBindBuffer(GL_ARRAY_BUFFER, buf_gchars_id);
 	glBufferData(GL_ARRAY_BUFFER, gchar_maximum_number * sizeof(gchar_t),
 		gchar_array, GL_DYNAMIC_DRAW);
+	#endif
 
 	gs_t gs = {0};
 	gs_init(&gs);
@@ -137,6 +137,7 @@ int main(void)
 		bg_render(&bg);
 		gs_render(&gs);
 
+		#if 0
 		if (gchar_number > 0)
 		{
 			glActiveTexture(GL_TEXTURE0);
@@ -168,6 +169,7 @@ int main(void)
 			#undef ATTRIB_LOCATION_POS_XYWH
 			#undef ATTRIB_LOCATION_FONT_XYWH
 		}
+		#endif
 
 		SDL_GL_SwapWindow(g_window);
 	}
