@@ -1,6 +1,6 @@
 
 #include "dbgmsg.h"
-#include <GL/glew.h>
+#include "opengl.h"
 #include <SDL2/SDL.h>
 
 /* Return the name of the source parameter of the debug message callback. */
@@ -35,7 +35,7 @@ static char* opengl_dbgmsg_source_name(GLenum source)
 		case GL_DEBUG_SOURCE_OTHER:
 			return "OTHER";
 		default:
-			return "< NOT A SOURCE >";
+			return "NOT_A_SOURCE";
 	}
 }
 
@@ -62,7 +62,7 @@ static char* opengl_dbgmsg_type_name(GLenum type)
 		case GL_DEBUG_TYPE_OTHER:
 			return "OTHER";
 		default:
-			return "< NOT A TYPE >";
+			return "NOT_A_TYPE";
 	}
 }
 
@@ -79,7 +79,7 @@ static char* opengl_dbgmsg_severity_name(GLenum type)
 		case GL_DEBUG_SEVERITY_NOTIFICATION:
 			return "NOTIFICATION";
 		default:
-			return "< NOT A SEVERITY >";
+			return "NOT_A_SEVERITY";
 	}
 }
 
@@ -88,12 +88,18 @@ static void GLAPIENTRY opengl_dbgmsg_callback(
 	const GLchar* message, const void* user_param)
 {
 	(void)length; (void)user_param;
-	#ifndef DEBUG
-		/* Filter out non-error debug messages if not in a debug build. */
+	#ifndef ENABLE_OPENGL_NOTIFICATIONS
+		/* Filter out non-error debug messages if not opted-in. */
 		if (type != GL_DEBUG_TYPE_ERROR)
 		{
 			return;
 		}
+		/* Note: The printing of non-error debug messages will looks like
+		 * > OpenGL dbgmsg (NOTIFICATION severity) API:OTHER(131185)
+		 * > "Buffer detailed info: Buffer object 5
+		 * > (bound to GL_ARRAY_BUFFER_ARB, usage hint is GL_DYNAMIC_DRAW)
+		 * > will use VIDEO memory as the source for buffer object operations."
+		 * (or at least it looks like that on my machine). */
 	#endif
 	fprintf((type == GL_DEBUG_TYPE_ERROR) ? stderr : stdout,
 		"OpenGL dbgmsg (%s severity) %s:%s(%u) %s\"%s\"\x1b[39m\n",

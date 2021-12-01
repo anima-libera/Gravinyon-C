@@ -6,7 +6,7 @@
 #ifndef GRAVINYON_HEADER_SHADERS_
 #define GRAVINYON_HEADER_SHADERS_
 
-#include <GL/glew.h>
+#include "opengl.h"
 
 /* These are OpenGL shader program ids that can be given to glUseProgram.
  * They are obtained by a call to shprog_build_all

@@ -4,7 +4,7 @@
 
 #include "input.h"
 #include "random.h"
-#include <GL/glew.h>
+#include "opengl.h"
 
 #define GAME_VIEWPORT_LEFT 0
 #define GAME_VIEWPORT_TOP 0

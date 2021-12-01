@@ -3,7 +3,7 @@
 #define GRAVINYON_HEADER_BG_
 
 #include "random.h"
-#include <GL/glew.h>
+#include "opengl.h"
 
 struct star_t
 {

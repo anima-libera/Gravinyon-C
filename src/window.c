@@ -1,7 +1,7 @@
 
 #include "utils.h"
 #include "dbgmsg.h"
-#include <GL/glew.h>
+#include "opengl.h"
 #include <SDL2/SDL.h>
 
 SDL_Window* g_window = NULL;
@@ -53,12 +53,14 @@ int init_g_graphics(void)
 		error_sdl2_fail("SDL_GL_CreateContext");
 		return -1;
 	}
-	GLenum gnew_init_result = glewInit();
-	if (gnew_init_result != GLEW_OK)
-	{
-		fprintf(stderr, "GLEW error: glewInit failed: \"%s\"\n",
-			glewGetErrorString(gnew_init_result));
-	}
+	#ifdef USE_GLEW
+		GLenum gnew_init_result = glewInit();
+		if (gnew_init_result != GLEW_OK)
+		{
+			fprintf(stderr, "GLEW error: glewInit failed: \"%s\"\n",
+				glewGetErrorString(gnew_init_result));
+		}
+	#endif
 	enable_opengl_dbgmsg();
 	glEnable(GL_MULTISAMPLE);
 	if (SDL_GL_SetSwapInterval(-1) != 0)

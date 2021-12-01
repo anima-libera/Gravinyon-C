@@ -2,8 +2,8 @@
 #include "shaders.h"
 #include "utils.h"
 #include "embedded.h"
+#include "opengl.h"
 #include <stdio.h>
-#include <GL/glew.h>
 
 /* Wrapper around glCompileShader that prints out the error message to stderr
  * if the shader compilation fails. The dbg_info parameter can be NULL, but

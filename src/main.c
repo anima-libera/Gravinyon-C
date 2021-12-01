@@ -10,7 +10,7 @@
 #include "game.h"
 #include "input.h"
 #include "text.h"
-#include <GL/glew.h>
+#include "opengl.h"
 
 int init_g_all(void)
 {

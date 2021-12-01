@@ -185,7 +185,6 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		/* Collision with the cursor */
 		if (cursor_dist < SHIP_COLLIDE_RADIUS)
 		{
-			printf("TODO: die\n");
 			play_sound(g_sound_die);
 			gs_particles_boom(gs,
 				ship->x, ship->y, ship->angle, ship->speed,
@@ -204,7 +203,6 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 				ship->x - gs->enemy_array[j].x, ship->y - gs->enemy_array[j].y);
 			if (dist < SHIP_COLLIDE_RADIUS + ENEMY_RADIUS)
 			{
-				printf("TODO: die\n");
 				play_sound(g_sound_die);
 				gs_particles_boom(gs,
 					ship->x, ship->y, ship->angle, ship->speed,
@@ -270,7 +268,6 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 		#define BOUNCE_FACTOR 0.8f
 		if (ship->x < INGAME_LEFT || ship->x > INGAME_RIGHT)
 		{
-			printf("TODO: die\n");
 			play_sound(g_sound_die);
 			gs_particles_boom(gs,
 				ship->x, ship->y, ship->angle, -ship->speed,
@@ -391,7 +388,6 @@ void gs_perform_iter(gs_t* gs, commands_t* commands)
 					length(bullet->x - ship->x, bullet->y - ship->y);
 				if (ship_dist < SHIP_COLLIDE_RADIUS)
 				{
-					printf("TODO: die\n");
 					play_sound(g_sound_die);
 					gs_particles_boom(gs,
 						ship->x, ship->y, ship->angle, ship->speed,

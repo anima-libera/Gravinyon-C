@@ -6,7 +6,7 @@
 #ifndef GRAVINYON_HEADER_WINDOW_
 #define GRAVINYON_HEADER_WINDOW_
 
-#include <GL/glew.h>
+#include "opengl.h"
 #include <SDL2/SDL.h>
 
 /* The unique global Gravinyon window.

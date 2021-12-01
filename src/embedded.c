@@ -2,6 +2,7 @@
 /* This file is overwritten at each compilation.
  * Do not modify, see "embedded.h" or "_comp.py" instead. */
 
+
 /* Content of "shaders/ships.vert". */
 const char g_shader_ships_vert[] = "\n#version 430 core\nlayout(location = 0) in vec2 in_pos;\nlayout(location = 1) in float in_draw_angle;\nout float v_draw_angle;\n\nvoid main()\n{\n\tgl_Position = vec4(in_pos, 0.0, 1.0);\n\tv_draw_angle = in_draw_angle;\n}\n";
 

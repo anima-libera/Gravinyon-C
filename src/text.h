@@ -2,7 +2,7 @@
 #ifndef GRAVINYON_HEADER_TEXT_
 #define GRAVINYON_HEADER_TEXT_
 
-#include <GL/glew.h>
+#include "opengl.h"
 
 struct font_t
 {
