@@ -6,6 +6,12 @@ like a planet is attracted by its sun.
 
 Programmed by Anima Libera, see github.com/anima-libera uwu.
 
+## Note
+
+This project is an _old_ poject of me and I sometimes start a new instance of it in the hope of getting closer to the ultimate goal of a finished game than the previous iterations. Obviously, it never happens. Thus, this time, instead of making a new project, I'm reviving this one (something I oddly never did before, as if an old project belongs to someone else or something). This revival consists in "updating" the code with my current C practices.
+
+The TODO list below has not been through the revival process yet and is still old (maybe inacurate).
+
 ## TODO
 
 - Style
