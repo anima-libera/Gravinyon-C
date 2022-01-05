@@ -12,6 +12,8 @@ struct font_t
 };
 typedef struct font_t font_t;
 
+void font_init_alpha(font_t* font);
+
 /* Graphical character, one that is displayed on screen. */
 struct gchar_t
 {
@@ -29,5 +31,7 @@ struct text_layer_t
 	GLuint buf_gchars_id;
 };
 typedef struct text_layer_t text_layer_t;
+
+void text_layer_init(text_layer_t* tl);
 
 #endif /* GRAVINYON_HEADER_TEXT_ */

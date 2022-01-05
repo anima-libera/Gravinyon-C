@@ -11,6 +11,8 @@
 #include "input.h"
 #include "text.h"
 #include "opengl.h"
+#include "tests.h"
+#include <string.h>
 
 int init_g_all(void)
 {
@@ -42,13 +44,45 @@ void cleanup_g_all(void)
 	cleanup_g_graphics();
 }
 
-int main(void)
+int main(int argc, const char** argv)
 {
 	if (init_g_all() != 0)
 	{
-		return -1;
+		return EXIT_FAILURE;
 	}
 
+	const char* test_name = NULL;
+	for (unsigned int i = 1; i < (unsigned int)argc; i++)
+	{
+		if (strcmp(argv[i], "--test") == 0)
+		{
+			test_name = argv[++i];
+		}
+	}
+
+	const test_function_entry_t* test_function_entry = NULL;
+	if (test_name != NULL)
+	{
+		for (unsigned int i = 0; i < g_test_function_table_length; i++)
+		{
+			if (strcmp(g_test_function_table[i].name, test_name) == 0)
+			{
+				test_function_entry = &g_test_function_table[i];
+				break;
+			}
+		}
+		if (test_function_entry == NULL)
+		{
+			fprintf(stderr, "Error: Unknown test name \"%s\"\n", test_name);
+			return EXIT_FAILURE;
+		}
+	}
+	if (test_function_entry != NULL)
+	{
+		test_function_entry->function();
+	}
+
+	#if 0
 	#define FONT_TEXTURE_SIDE 256
 	unsigned char* font_data = xcalloc(FONT_TEXTURE_SIDE * FONT_TEXTURE_SIDE, 1);
 	font_data[2 + 16 * FONT_TEXTURE_SIDE] = 255;
@@ -77,7 +111,8 @@ int main(void)
 		0, GL_RED, FONT_TEXTURE_SIDE, FONT_TEXTURE_SIDE, 0, GL_RED, GL_UNSIGNED_BYTE, font_data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
+	#endif
+	
 	#if 0
 	unsigned int gchar_maximum_number;
 	unsigned int gchar_number;
