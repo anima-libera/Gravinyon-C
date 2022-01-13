@@ -5,6 +5,7 @@
 #include "input.h"
 #include "random.h"
 #include "opengl.h"
+#include <stdbool.h>
 
 #define GAME_VIEWPORT_LEFT 0
 #define GAME_VIEWPORT_TOP 0
@@ -51,10 +52,24 @@ struct part_t
 };
 typedef struct part_t part_t;
 
+struct game_settings_t
+{
+	bool enable_ships;
+	bool enable_enemies;
+	bool enable_bullets;
+	bool enable_particles;
+	bool enable_background;
+};
+typedef struct game_settings_t game_settings_t;
+
 /* Game state data */
 struct gs_t
 {
+	game_settings_t settings;
+	
 	rg_t rg;
+
+	float cursor_x, cursor_y;
 
 	unsigned int ship_maximum_number;
 	unsigned int ship_number;
@@ -78,19 +93,20 @@ struct gs_t
 };
 typedef struct gs_t gs_t;
 
+#define GAME_SETTINGS_ALL \
+	(game_settings_t) \
+	{ \
+		.enable_ships = true, \
+		.enable_enemies = true, \
+		.enable_bullets = true, \
+		.enable_particles = true, \
+		.enable_background = true, \
+	}
+
 int init_g_all(void);
 void cleanup_g_all(void);
-void gs_init(gs_t* gs);
-void gs_cleanup(gs_t* gs);
-ship_t* gs_alloc_ship(gs_t* gs);
-enemy_t* gs_alloc_enemy(gs_t* gs);
-bullet_t* gs_alloc_bullet(gs_t* gs);
-part_t* gs_alloc_part(gs_t* gs);
-void gs_spawn_ship(gs_t* gs);
-void gs_spawn_enemies(gs_t* gs);
-void gs_perform_iter(gs_t* gs, commands_t* commands);
-void gs_perform_iter_stars(gs_t* gs);
-void gs_render_stars(gs_t* gs);
-void gs_render(gs_t* gs);
+
+void game_loop(game_settings_t game_settings);
+void game_loop_refactoring(game_settings_t game_settings);
 
 #endif /* GRAVINYON_HEADER_GAME_ */

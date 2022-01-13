@@ -109,6 +109,7 @@ void play_sound(sound_t sound)
 	SDL_ClearQueuedAudio(s_audio_device_id_array[min_index]);
 	int success_uwu = SDL_QueueAudio(s_audio_device_id_array[min_index],
 		sound.buffer, sound.length);
+	(void)success_uwu; /* TODO: Handle errors maybe ? */
 	SDL_PauseAudioDevice(s_audio_device_id_array[min_index], SDL_FALSE);
 	if (min_index == s_audio_device_next_index)
 	{
