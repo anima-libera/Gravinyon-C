@@ -14,8 +14,7 @@ The OLD TODO list below has not been through the revival process yet and is stil
 
 ## NEW TODO list
 
-- Make the core loop filled with conditionnals to be able to "enable" and "disable" lots of features and aspects and debugging visuals at run time.
-- Remove `if`s such as in `if (enable_bullets) { for (i = 0; i < bullet_number; i++) { ... }}` (as bullet_number should be `0` anyway), maybe even prefer something like `enable_shooting_bullets` instead of `enable_bullets`, or maybe even better: start some primitive weapon system with two weapons (the classic one and a debugging one that doesn't shoot).
+- Start some primitive weapon system with two weapons (the classic one and a debugging one that doesn't shoot) and generalize this to background, enemy spawning, etc.
 - Make the code and the build system able to support testing of very different features and aspects of the game. To do this, have somewhere (in the C code) a list of functions, each of which will be called at game initialization to load and run one specific case to be tested/developed.
 - Have some more general shaders for models, and use instancing to draw enemies and stuff.
 - Use some _temporary library_ for text rendering (or not, text rendering is probably not important for now).

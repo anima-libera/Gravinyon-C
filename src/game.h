@@ -14,6 +14,8 @@
 #define GAME_ASPECT_RATIO \
 	((float)GAME_VIEWPORT_WIDTH / (float)GAME_VIEWPORT_HEIGHT)
 
+typedef struct gs_t gs_t;
+
 struct ship_t
 {
 	float x, y;
@@ -28,6 +30,7 @@ struct enemy_t
 	float x, y;
 	float r, g, b;
 	float angle, speed;
+	void (*behavior)(gs_t* gs, struct enemy_t* enemy);
 };
 typedef struct enemy_t enemy_t;
 
@@ -54,13 +57,24 @@ typedef struct part_t part_t;
 
 struct game_settings_t
 {
-	bool enable_ships;
-	bool enable_enemies;
-	bool enable_bullets;
-	bool enable_particles;
-	bool enable_background;
+	bool enabled_spawning_ships;
+	bool enabled_spawning_enemies;
+	bool enabled_shooting;
+	bool enabled_spawning_particles;
+	bool enabled_background;
 };
 typedef struct game_settings_t game_settings_t;
+
+#define GAME_SETTINGS_ALL \
+	(game_settings_t) \
+	{ \
+		.enabled_spawning_ships = true, \
+		.enabled_spawning_enemies = true, \
+		.enabled_shooting = true, \
+		.enabled_spawning_particles = true, \
+		.enabled_background = true, \
+	}
+
 
 /* Game state data */
 struct gs_t
@@ -91,22 +105,10 @@ struct gs_t
 	part_t* part_array;
 	GLuint buf_parts_id;
 };
-typedef struct gs_t gs_t;
-
-#define GAME_SETTINGS_ALL \
-	(game_settings_t) \
-	{ \
-		.enable_ships = true, \
-		.enable_enemies = true, \
-		.enable_bullets = true, \
-		.enable_particles = true, \
-		.enable_background = true, \
-	}
 
 int init_g_all(void);
 void cleanup_g_all(void);
 
 void game_loop(game_settings_t game_settings);
-void game_loop_refactoring(game_settings_t game_settings);
 
 #endif /* GRAVINYON_HEADER_GAME_ */
