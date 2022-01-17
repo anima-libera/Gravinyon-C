@@ -25,16 +25,18 @@ void test_no_background(void)
 	game_loop(game_settings);
 }
 
-void test_refactor(void)
+void test_hard(void)
 {
-	game_loop(GAME_SETTINGS_ALL);
+	game_settings_t game_settings = GAME_SETTINGS_ALL;
+	game_settings.spawning_enemies_intensity = 20;
+	game_loop(game_settings);
 }
 
 const test_function_entry_t g_test_function_table[] = {
 	{"test", test_test},
 	{"only-background", test_only_background},
 	{"no-background", test_no_background},
-	{"refactor", test_refactor},
+	{"hard", test_hard},
 };
 const unsigned int g_test_function_table_length =
 	sizeof g_test_function_table / sizeof g_test_function_table[0];

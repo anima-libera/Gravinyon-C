@@ -221,6 +221,95 @@ void enemy_behavior_random(gs_t* gs, struct enemy_t* enemy)
 	enemy->speed = length(vx, vy);
 }
 
+void enemy_behavior_angry(gs_t* gs, struct enemy_t* enemy)
+{
+	float vx = cosf(enemy->angle) * enemy->speed;
+	float vy = sinf(enemy->angle) * enemy->speed;
+
+	enemy->x += vx;
+	enemy->y += vy;
+
+	if (enemy->x < INGAME_LEFT)
+	{
+		enemy->x = INGAME_RIGHT;
+	}
+	else if (enemy->x > INGAME_RIGHT)
+	{
+		enemy->x = INGAME_LEFT;
+	}
+	if (enemy->y < INGAME_BOTTOM)
+	{
+		enemy->y = INGAME_BOTTOM;
+		vy *= -1.0f;
+	}
+	else if (enemy->y > INGAME_TOP)
+	{
+		enemy->y = INGAME_TOP;
+		vy *= -1.0f;
+	}
+
+	for (unsigned int i = 0; i < gs->ship_number; i++)
+	{
+		const ship_t* ship = &gs->ship_array[i];
+		float dist = length(ship->x - enemy->x, ship->y - enemy->y);
+
+		if (dist < 0.3f)
+		{
+			float ship_angle = atan2f(ship->y - enemy->y, ship->x - enemy->x);
+
+			vx = cosf(ship_angle) * enemy->speed;
+			vy = sinf(ship_angle) * enemy->speed;
+		}
+	}
+
+	enemy->angle = atan2f(vy, vx);
+	enemy->speed = length(vx, vy);
+}
+
+void enemy_behavior_cursor(gs_t* gs, struct enemy_t* enemy)
+{
+	float vx = cosf(enemy->angle) * enemy->speed;
+	float vy = sinf(enemy->angle) * enemy->speed;
+
+	enemy->x += vx;
+	enemy->y += vy;
+
+	if (enemy->x < INGAME_LEFT)
+	{
+		enemy->x = INGAME_RIGHT;
+	}
+	else if (enemy->x > INGAME_RIGHT)
+	{
+		enemy->x = INGAME_LEFT;
+	}
+	if (enemy->y < INGAME_BOTTOM)
+	{
+		enemy->y = INGAME_BOTTOM;
+		vy *= -1.0f;
+	}
+	else if (enemy->y > INGAME_TOP)
+	{
+		enemy->y = INGAME_TOP;
+		vy *= -1.0f;
+	}
+
+	float cursor_angle = atan2f(gs->cursor_y - enemy->y, gs->cursor_x - enemy->x);
+	float cursor_dist = length(gs->cursor_x - enemy->x, gs->cursor_y - enemy->y);
+
+	vx = cosf(cursor_angle + TAU/4.0f) * enemy->speed;
+	vy = sinf(cursor_angle + TAU/4.0f) * enemy->speed;
+
+	enemy->speed = length(vx, vy);
+	
+	if (cursor_dist > 0.5f)
+	{
+		vx += cosf(cursor_angle) * enemy->speed * (cursor_dist - 0.5f) * 10.0f;
+		vy += sinf(cursor_angle) * enemy->speed * (cursor_dist - 0.5f) * 10.0f;
+	}
+
+	enemy->angle = atan2f(vy, vx);
+}
+
 struct enemy_type_t
 {
 	float r, g, b;
@@ -232,6 +321,8 @@ static const enemy_type_t s_enemy_type_table[] = {
 	{.r = 0.0f, .g = 1.0f, .b = 1.0f, .behavior = enemy_behavior_basic},
 	{.r = 0.3f, .g = 1.0f, .b = 0.0f, .behavior = enemy_behavior_aimer},
 	{.r = 0.9f, .g = 0.4f, .b = 0.1f, .behavior = enemy_behavior_random},
+	{.r = 1.0f, .g = 1.0f, .b = 0.0f, .behavior = enemy_behavior_angry},
+	{.r = 0.6f, .g = 0.0f, .b = 1.0f, .behavior = enemy_behavior_cursor},
 };
 static const unsigned int s_enemy_type_number = sizeof s_enemy_type_table / sizeof (enemy_type_t);
 
@@ -240,7 +331,9 @@ void gs_spawn_enemies(gs_t* gs)
 	unsigned int spawn_number = rg_int(&gs->rg, 2, 8);
 	for (unsigned int i = 0; i < spawn_number; i++)
 	{
-		const enemy_type_t* type = &s_enemy_type_table[rg_int(&gs->rg, 0, s_enemy_type_number-1)];
+		const enemy_type_t* type = rg_int(&gs->rg, 0, 3-1) == 0 ?
+			&s_enemy_type_table[rg_int(&gs->rg, 0, s_enemy_type_number-1)] :
+			&s_enemy_type_table[0];
 		
 		enemy_t* new_enemy = gs_alloc_enemy(gs);
 		new_enemy->r = type->r;
@@ -453,7 +546,8 @@ void gs_render(gs_t* gs)
 
 void gs_spawn_enemies_maybe(gs_t* gs)
 {
-	if (gs->enemy_number <= 3 || rg_int(&gs->rg, 0, 999) == 0)
+	if (gs->enemy_number <= gs->settings.spawning_enemies_intensity ||
+		rg_int(&gs->rg, 0, 999) == 0)
 	{
 		gs_spawn_enemies(gs);
 	}

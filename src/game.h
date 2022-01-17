@@ -60,6 +60,7 @@ struct game_settings_t
 {
 	bool enabled_spawning_ships;
 	bool enabled_spawning_enemies;
+	unsigned int spawning_enemies_intensity;
 	bool enabled_shooting;
 	bool enabled_spawning_particles;
 	const bg_description_t* background;
@@ -71,6 +72,7 @@ typedef struct game_settings_t game_settings_t;
 	{ \
 		.enabled_spawning_ships = true, \
 		.enabled_spawning_enemies = true, \
+		.spawning_enemies_intensity = 3, \
 		.enabled_shooting = true, \
 		.enabled_spawning_particles = true, \
 		.background = &g_bg_description_blue_clouds_and_stars, \
