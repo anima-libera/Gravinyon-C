@@ -134,7 +134,7 @@ void enemy_behavior_basic(gs_t* gs, struct enemy_t* enemy)
 	enemy->speed = length(vx, vy);
 }
 
-void enemy_behavior_test_01(gs_t* gs, struct enemy_t* enemy)
+void enemy_behavior_aimer(gs_t* gs, struct enemy_t* enemy)
 {
 	float vx = cosf(enemy->angle) * enemy->speed;
 	float vy = sinf(enemy->angle) * enemy->speed;
@@ -175,6 +175,52 @@ void enemy_behavior_test_01(gs_t* gs, struct enemy_t* enemy)
 	enemy->speed = length(vx, vy);
 }
 
+void enemy_behavior_random(gs_t* gs, struct enemy_t* enemy)
+{
+	float vx = cosf(enemy->angle) * enemy->speed;
+	float vy = sinf(enemy->angle) * enemy->speed;
+
+	enemy->x += vx;
+	enemy->y += vy;
+
+	if (enemy->x < INGAME_LEFT)
+	{
+		enemy->x = INGAME_RIGHT;
+	}
+	else if (enemy->x > INGAME_RIGHT)
+	{
+		enemy->x = INGAME_LEFT;
+	}
+	if (enemy->y < INGAME_BOTTOM)
+	{
+		enemy->y = INGAME_BOTTOM;
+		vy *= -1.0f;
+	}
+	else if (enemy->y > INGAME_TOP)
+	{
+		enemy->y = INGAME_TOP;
+		vy *= -1.0f;
+	}
+
+	if (rg_int(&gs->rg, 0, 120) == 0)
+	{
+		float random_angle = rg_float(&gs->rg, TAU * 1.0f/4.0f, TAU * 3.0f/4.0f);
+
+		vx = cosf(random_angle) * enemy->speed;
+		vy = sinf(random_angle) * enemy->speed;
+	}
+	if (rg_int(&gs->rg, 0, 120) == 0)
+	{
+		float random_speed = rg_float(&gs->rg, 0.001f, 0.009f);
+
+		vx = cosf(enemy->angle) * random_speed;
+		vy = sinf(enemy->angle) * random_speed;
+	}
+
+	enemy->angle = atan2f(vy, vx);
+	enemy->speed = length(vx, vy);
+}
+
 struct enemy_type_t
 {
 	float r, g, b;
@@ -184,7 +230,8 @@ typedef struct enemy_type_t enemy_type_t;
 
 static const enemy_type_t s_enemy_type_table[] = {
 	{.r = 0.0f, .g = 1.0f, .b = 1.0f, .behavior = enemy_behavior_basic},
-	{.r = 0.3f, .g = 1.0f, .b = 0.0f, .behavior = enemy_behavior_test_01},
+	{.r = 0.3f, .g = 1.0f, .b = 0.0f, .behavior = enemy_behavior_aimer},
+	{.r = 0.9f, .g = 0.4f, .b = 0.1f, .behavior = enemy_behavior_random},
 };
 static const unsigned int s_enemy_type_number = sizeof s_enemy_type_table / sizeof (enemy_type_t);
 
