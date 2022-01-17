@@ -5,6 +5,7 @@
 #include "input.h"
 #include "random.h"
 #include "opengl.h"
+#include "bg.h"
 #include <stdbool.h>
 
 #define GAME_VIEWPORT_LEFT 0
@@ -61,7 +62,7 @@ struct game_settings_t
 	bool enabled_spawning_enemies;
 	bool enabled_shooting;
 	bool enabled_spawning_particles;
-	bool enabled_background;
+	const bg_description_t* background;
 };
 typedef struct game_settings_t game_settings_t;
 
@@ -72,9 +73,8 @@ typedef struct game_settings_t game_settings_t;
 		.enabled_spawning_enemies = true, \
 		.enabled_shooting = true, \
 		.enabled_spawning_particles = true, \
-		.enabled_background = true, \
+		.background = &g_bg_description_blue_clouds_and_stars, \
 	}
-
 
 /* Game state data */
 struct gs_t

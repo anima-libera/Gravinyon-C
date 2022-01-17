@@ -1,6 +1,7 @@
 
 #include "tests.h"
 #include "game.h"
+#include "bg.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -13,14 +14,14 @@ void test_test(void)
 void test_only_background(void)
 {
 	game_settings_t game_settings = {0};
-	game_settings.enabled_background = true;
+	game_settings.background = &g_bg_description_blue_clouds_and_stars;
 	game_loop(game_settings);
 }
 
 void test_no_background(void)
 {
 	game_settings_t game_settings = GAME_SETTINGS_ALL;
-	game_settings.enabled_background = false;
+	game_settings.background = &g_bg_description_black;
 	game_loop(game_settings);
 }
 

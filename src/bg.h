@@ -2,35 +2,18 @@
 #ifndef GRAVINYON_HEADER_BG_
 #define GRAVINYON_HEADER_BG_
 
-#include "random.h"
-#include "opengl.h"
+typedef void generic_bg_data_t;
 
-struct star_t
+struct bg_description_t
 {
-	float x, y;
-	float r, g, b;
-	float size;
-	float speed;
+	generic_bg_data_t* (*init)(void);
+	void (*cleanup)(generic_bg_data_t* data);
+	void (*iter)(generic_bg_data_t* data);
+	void (*render)(generic_bg_data_t* data);
 };
-typedef struct star_t star_t;
+typedef struct bg_description_t bg_description_t;
 
-struct bg_t
-{
-	float time;
-	rg_t rg;
-
-	unsigned int star_maximum_number;
-	unsigned int star_number;
-	star_t* star_array;
-	GLuint buf_stars_id;
-};
-typedef struct bg_t bg_t;
-
-void bg_init(bg_t* bg);
-void bg_cleanup(bg_t* bg);
-void bg_render(bg_t* bg);
-star_t* bg_alloc_star(bg_t* bg);
-void bg_render(bg_t* bg);
-void bg_perform_iter(bg_t* bg);
+extern const bg_description_t g_bg_description_black;
+extern const bg_description_t g_bg_description_blue_clouds_and_stars;
 
 #endif /* GRAVINYON_HEADER_BG_ */

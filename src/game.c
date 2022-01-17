@@ -776,11 +776,7 @@ void game_loop(game_settings_t game_settings)
 		gs_spawn_ship(&gs);
 	}
 
-	bg_t bg = {0};
-	if (gs.settings.enabled_background)
-	{
-		bg_init(&bg);
-	}
+	generic_bg_data_t* bg_data = gs.settings.background->init();
 
 	commands_t commands = {0};
 	
@@ -804,20 +800,9 @@ void game_loop(game_settings_t game_settings)
 
 		gs_perform_iter(&gs, &commands);
 
-		if (gs.settings.enabled_background)
-		{
-			bg_perform_iter(&bg);
-		}
+		gs.settings.background->iter(bg_data);
 
-		if (gs.settings.enabled_background)
-		{
-			bg_render(&bg);
-		}
-		else
-		{
-			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-		}
+		gs.settings.background->render(bg_data);
 
 		gs_render_ships(&gs);
 		gs_render_enemies(&gs);
@@ -827,10 +812,7 @@ void game_loop(game_settings_t game_settings)
 		SDL_GL_SwapWindow(g_window);
 	}
 
-	if (gs.settings.enabled_background)
-	{
-		bg_cleanup(&bg);
-	}
+	gs.settings.background->cleanup(bg_data);
 
 	free(gs.ship_array);
 	glDeleteBuffers(1, &gs.buf_ships_id);
